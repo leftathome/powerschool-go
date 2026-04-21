@@ -2,10 +2,11 @@
 
 A Go client library for the PowerSchool e-learning platform.
 
-> **Pre-v0.1.0.** The library covers the paths a parent account needs
+> **v0.1.0.** The library covers the paths a parent account needs
 > — login, students, grades, and per-course assignments — against at
-> least one real PowerSchool instance. The public surface may still
-> break before v0.1.0.
+> least one real PowerSchool instance. See
+> [CHANGELOG.md](CHANGELOG.md) for release notes and known
+> limitations.
 
 ## Overview
 
