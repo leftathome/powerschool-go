@@ -1,0 +1,28 @@
+{
+  "_comment": "Copy this file to hack/redact.config.json (gitignored) and fill in the real->placeholder mapping for your own PowerSchool account. The redactor applies entries longest-first; it refuses to run if any replacement value contains a find key, since that would break idempotence. Keys are raw substrings, so name-like keys must be specific enough to avoid false matches (e.g. prefer 'Alpha Lastname' over 'Alpha').",
+
+  "replacements": {
+    "Realchild Alpha Lastname":    "Student Alpha",
+    "Realchild Beta Lastname":     "Student Beta",
+    "realparent@example.net":      "parent@example.com",
+    "alpha.student@example.net":   "studentalpha@example.com",
+    "beta.student@example.net":    "studentbeta@example.com",
+    "My Real Middle School":       "Example Middle School",
+
+    "REAL_NAV_STUDENT_A":          "111111",
+    "REAL_NAV_STUDENT_B":          "111112",
+    "REAL_STUDENTFRN_A":           "001999999",
+    "REAL_APIID_A":                "999999",
+    "REAL_STUDENT_NUM_A":          "11111111",
+    "REAL_STATE_ID_A":             "9999999901",
+
+    "REAL_FRN_COURSE_1":           "00111222333",
+    "REAL_FRN_COURSE_2":           "00111333444",
+    "REAL_SECTION_ID_1":           "654321",
+    "REAL_SECTIONSDCID_1":         "654000",
+
+    "ps.myschool.org":             "ps.example.org",
+    "MY_1PASSWORD_ITEM_ID":        "your-powerschool-item",
+    "MY_DISTRICT_CODE":            "XXXX"
+  }
+}

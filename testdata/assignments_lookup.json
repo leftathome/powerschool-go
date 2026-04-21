@@ -1,0 +1,1988 @@
+[
+  {
+    "_name": "assignment",
+    "_assignmentsections": [
+      {
+        "_name": "assignmentsection",
+        "isscorespublish": true,
+        "description": "<p>Cells: The Basic Unit of Life reading and vocab</p>",
+        "scoreentrypoints": 10,
+        "weight": 1,
+        "isscoringneeded": true,
+        "sectionsdcid": 654000,
+        "totalpointvalue": 10,
+        "assignmentsectionid": 2447973,
+        "iscountedinfinalgrade": true,
+        "duedate": "2025-09-18",
+        "_assignmentscores": [
+          {
+            "scorepoints": 10,
+            "islate": false,
+            "_name": "assignmentscore",
+            "isexempt": false,
+            "studentsdcid": 999999,
+            "scorelettergrade": "A",
+            "isabsent": false,
+            "ismissing": false,
+            "isincomplete": false,
+            "whenmodified": "2025-09-21",
+            "iscollected": false,
+            "actualscorekind": "REAL_SCORE",
+            "authoredbyuc": false,
+            "scoreentrydate": "2025-09-21 17:16:37",
+            "actualscoreentered": "100",
+            "scorepercent": 100
+          }
+        ],
+        "name": "Pre-Reading #1",
+        "scoretype": "PERCENT",
+        "_id": 2447973,
+        "_assignmentcategoryassociations": [
+          {
+            "assignmentcategoryassocid": 2447636,
+            "_name": "assignmentcategoryassoc",
+            "_teachercategory": {
+              "_name": "teachercategory",
+              "color": "4",
+              "name": "Pre - Reading"
+            },
+            "_id": 2447636,
+            "isprimary": true
+          }
+        ]
+      }
+    ],
+    "_id": 1087772,
+    "hasstandards": false,
+    "standardscoringmethod": "GradeScale",
+    "assignmentid": 1087772
+  },
+  {
+    "_name": "assignment",
+    "_assignmentsections": [
+      {
+        "_name": "assignmentsection",
+        "isscorespublish": true,
+        "scoreentrypoints": 100,
+        "weight": 1,
+        "isscoringneeded": true,
+        "sectionsdcid": 654000,
+        "totalpointvalue": 100,
+        "assignmentsectionid": 2586463,
+        "iscountedinfinalgrade": true,
+        "duedate": "2025-11-24",
+        "_assignmentscores": [
+          {
+            "scorepoints": 84,
+            "islate": false,
+            "_name": "assignmentscore",
+            "isexempt": false,
+            "studentsdcid": 999999,
+            "scorelettergrade": "B",
+            "isabsent": false,
+            "ismissing": false,
+            "isincomplete": false,
+            "whenmodified": "2025-12-15",
+            "iscollected": false,
+            "actualscorekind": "REAL_SCORE",
+            "authoredbyuc": false,
+            "scoreentrydate": "2025-12-15 15:24:53",
+            "actualscoreentered": "84",
+            "scorepercent": 84
+          }
+        ],
+        "name": "Nutrition Bar Proposal",
+        "scoretype": "PERCENT",
+        "_id": 2586463,
+        "_assignmentcategoryassociations": [
+          {
+            "assignmentcategoryassocid": 2586174,
+            "_name": "assignmentcategoryassoc",
+            "_teachercategory": {
+              "_name": "teachercategory",
+              "color": "2",
+              "name": "Assessment"
+            },
+            "_id": 2586174,
+            "isprimary": true
+          }
+        ]
+      }
+    ],
+    "_id": 1156517,
+    "hasstandards": false,
+    "standardscoringmethod": "GradeScale",
+    "assignmentid": 1156517
+  },
+  {
+    "_name": "assignment",
+    "_assignmentsections": [
+      {
+        "_name": "assignmentsection",
+        "isscorespublish": true,
+        "description": "<p>Practice test.</p>",
+        "scoreentrypoints": 10,
+        "weight": 1,
+        "isscoringneeded": true,
+        "sectionsdcid": 654000,
+        "totalpointvalue": 10,
+        "assignmentsectionid": 2438134,
+        "iscountedinfinalgrade": true,
+        "duedate": "2025-09-08",
+        "_assignmentscores": [
+          {
+            "iscollected": true,
+            "islate": false,
+            "_name": "assignmentscore",
+            "authoredbyuc": false,
+            "isexempt": false,
+            "studentsdcid": 999999,
+            "scoreentrydate": "2025-09-15 21:05:37",
+            "isabsent": false,
+            "ismissing": false,
+            "isincomplete": false,
+            "whenmodified": "2025-09-15"
+          }
+        ],
+        "name": "Benchmark WCAS",
+        "scoretype": "COLLECTED",
+        "_id": 2438134,
+        "_assignmentcategoryassociations": [
+          {
+            "assignmentcategoryassocid": 2437792,
+            "_name": "assignmentcategoryassoc",
+            "_teachercategory": {
+              "_name": "teachercategory",
+              "color": "3",
+              "name": "Participation"
+            },
+            "_id": 2437792,
+            "isprimary": true
+          }
+        ]
+      }
+    ],
+    "_id": 1083160,
+    "hasstandards": false,
+    "standardscoringmethod": "GradeScale",
+    "assignmentid": 1083160
+  },
+  {
+    "_name": "assignment",
+    "_assignmentsections": [
+      {
+        "_name": "assignmentsection",
+        "isscorespublish": true,
+        "scoreentrypoints": 5,
+        "weight": 1,
+        "isscoringneeded": true,
+        "sectionsdcid": 654000,
+        "totalpointvalue": 5,
+        "assignmentsectionid": 2492467,
+        "iscountedinfinalgrade": true,
+        "duedate": "2025-09-24",
+        "_assignmentscores": [
+          {
+            "scorepoints": 5,
+            "islate": false,
+            "_name": "assignmentscore",
+            "isexempt": false,
+            "studentsdcid": 999999,
+            "scorelettergrade": "A",
+            "isabsent": false,
+            "ismissing": false,
+            "isincomplete": false,
+            "whenmodified": "2025-10-16",
+            "iscollected": false,
+            "actualscorekind": "REAL_SCORE",
+            "authoredbyuc": false,
+            "scoreentrydate": "2025-10-16 16:17:06",
+            "actualscoreentered": "100",
+            "scorepercent": 100
+          }
+        ],
+        "name": "Pre-Reading #2: The Human Microbiome",
+        "scoretype": "PERCENT",
+        "_id": 2492467,
+        "_assignmentcategoryassociations": [
+          {
+            "assignmentcategoryassocid": 2492145,
+            "_name": "assignmentcategoryassoc",
+            "_teachercategory": {
+              "_name": "teachercategory",
+              "color": "4",
+              "name": "Pre - Reading"
+            },
+            "_id": 2492145,
+            "isprimary": true
+          }
+        ]
+      }
+    ],
+    "_id": 1109037,
+    "hasstandards": false,
+    "standardscoringmethod": "GradeScale",
+    "assignmentid": 1109037
+  },
+  {
+    "_name": "assignment",
+    "_assignmentsections": [
+      {
+        "_name": "assignmentsection",
+        "isscorespublish": true,
+        "scoreentrypoints": 5,
+        "weight": 1,
+        "isscoringneeded": true,
+        "sectionsdcid": 654000,
+        "totalpointvalue": 5,
+        "assignmentsectionid": 2492543,
+        "iscountedinfinalgrade": true,
+        "duedate": "2025-09-30",
+        "_assignmentscores": [
+          {
+            "scorepoints": 5,
+            "islate": false,
+            "_name": "assignmentscore",
+            "isexempt": false,
+            "studentsdcid": 999999,
+            "scorelettergrade": "A",
+            "isabsent": false,
+            "ismissing": false,
+            "isincomplete": false,
+            "whenmodified": "2025-10-16",
+            "iscollected": false,
+            "actualscorekind": "REAL_SCORE",
+            "authoredbyuc": false,
+            "scoreentrydate": "2025-10-16 16:17:06",
+            "actualscoreentered": "100",
+            "scorepercent": 100
+          }
+        ],
+        "name": "Pre-Reading #3: Antibiotics and the Microbiome",
+        "scoretype": "PERCENT",
+        "_id": 2492543,
+        "_assignmentcategoryassociations": [
+          {
+            "assignmentcategoryassocid": 2492221,
+            "_name": "assignmentcategoryassoc",
+            "_teachercategory": {
+              "_name": "teachercategory",
+              "color": "4",
+              "name": "Pre - Reading"
+            },
+            "_id": 2492221,
+            "isprimary": true
+          }
+        ]
+      }
+    ],
+    "_id": 1109068,
+    "hasstandards": false,
+    "standardscoringmethod": "GradeScale",
+    "assignmentid": 1109068
+  },
+  {
+    "_name": "assignment",
+    "_assignmentsections": [
+      {
+        "_name": "assignmentsection",
+        "isscorespublish": true,
+        "scoreentrypoints": 10,
+        "weight": 1,
+        "isscoringneeded": true,
+        "sectionsdcid": 654000,
+        "totalpointvalue": 10,
+        "assignmentsectionid": 2517596,
+        "iscountedinfinalgrade": true,
+        "duedate": "2025-10-09",
+        "_assignmentscores": [
+          {
+            "scorepoints": 5,
+            "islate": false,
+            "_name": "assignmentscore",
+            "isexempt": false,
+            "studentsdcid": 999999,
+            "scorelettergrade": "E",
+            "isabsent": false,
+            "ismissing": true,
+            "isincomplete": false,
+            "whenmodified": "2025-10-31",
+            "iscollected": false,
+            "actualscorekind": "SCORE_CODE",
+            "authoredbyuc": false,
+            "scoreentrydate": "2025-10-31 15:42:47",
+            "actualscoreentered": "IE",
+            "scorepercent": 50
+          }
+        ],
+        "name": "Warm-Ups 10/6-10/9",
+        "scoretype": "PERCENT",
+        "_id": 2517596,
+        "_assignmentcategoryassociations": [
+          {
+            "assignmentcategoryassocid": 2517292,
+            "_name": "assignmentcategoryassoc",
+            "_teachercategory": {
+              "_name": "teachercategory",
+              "color": "7",
+              "name": "Warm Ups"
+            },
+            "_id": 2517292,
+            "isprimary": true
+          }
+        ]
+      }
+    ],
+    "_id": 1121982,
+    "hasstandards": false,
+    "standardscoringmethod": "GradeScale",
+    "assignmentid": 1121982
+  },
+  {
+    "_name": "assignment",
+    "_assignmentsections": [
+      {
+        "_name": "assignmentsection",
+        "isscorespublish": true,
+        "scoreentrypoints": 15,
+        "weight": 1,
+        "isscoringneeded": true,
+        "sectionsdcid": 654000,
+        "totalpointvalue": 15,
+        "assignmentsectionid": 2534874,
+        "iscountedinfinalgrade": true,
+        "duedate": "2025-10-24",
+        "_assignmentscores": [
+          {
+            "scorepoints": 7.5,
+            "islate": false,
+            "_name": "assignmentscore",
+            "isexempt": false,
+            "studentsdcid": 999999,
+            "scorelettergrade": "E",
+            "isabsent": false,
+            "ismissing": true,
+            "isincomplete": false,
+            "whenmodified": "2025-11-10",
+            "iscollected": false,
+            "actualscorekind": "SCORE_CODE",
+            "authoredbyuc": false,
+            "scoreentrydate": "2025-11-10 22:26:27",
+            "actualscoreentered": "IE",
+            "scorepercent": 50
+          }
+        ],
+        "name": "Diagnosing Elisa",
+        "scoretype": "PERCENT",
+        "_id": 2534874,
+        "_assignmentcategoryassociations": [
+          {
+            "assignmentcategoryassocid": 2534584,
+            "_name": "assignmentcategoryassoc",
+            "_teachercategory": {
+              "_name": "teachercategory",
+              "color": "1",
+              "name": "Classwork",
+              "description": "This Category is for High and Middle Schools only who use Point calculations"
+            },
+            "_id": 2534584,
+            "isprimary": true
+          }
+        ]
+      }
+    ],
+    "_id": 1130839,
+    "hasstandards": false,
+    "standardscoringmethod": "GradeScale",
+    "assignmentid": 1130839
+  },
+  {
+    "_name": "assignment",
+    "_assignmentsections": [
+      {
+        "_name": "assignmentsection",
+        "isscorespublish": true,
+        "scoreentrypoints": 10,
+        "weight": 1,
+        "isscoringneeded": true,
+        "sectionsdcid": 654000,
+        "totalpointvalue": 10,
+        "assignmentsectionid": 2534866,
+        "iscountedinfinalgrade": true,
+        "duedate": "2025-10-24",
+        "_assignmentscores": [
+          {
+            "scorepoints": 5.5,
+            "islate": false,
+            "_name": "assignmentscore",
+            "isexempt": false,
+            "studentsdcid": 999999,
+            "scorelettergrade": "E",
+            "isabsent": false,
+            "ismissing": false,
+            "isincomplete": false,
+            "whenmodified": "2025-11-10",
+            "iscollected": false,
+            "actualscorekind": "REAL_SCORE",
+            "authoredbyuc": false,
+            "scoreentrydate": "2025-11-10 22:19:51",
+            "actualscoreentered": "55",
+            "scorepercent": 55
+          }
+        ],
+        "name": "Warm-Ups 10/20-10/24",
+        "scoretype": "PERCENT",
+        "_id": 2534866,
+        "_assignmentcategoryassociations": [
+          {
+            "assignmentcategoryassocid": 2534576,
+            "_name": "assignmentcategoryassoc",
+            "_teachercategory": {
+              "_name": "teachercategory",
+              "color": "7",
+              "name": "Warm Ups"
+            },
+            "_id": 2534576,
+            "isprimary": true
+          }
+        ]
+      }
+    ],
+    "_id": 1130837,
+    "hasstandards": false,
+    "standardscoringmethod": "GradeScale",
+    "assignmentid": 1130837
+  },
+  {
+    "_name": "assignment",
+    "_assignmentsections": [
+      {
+        "_name": "assignmentsection",
+        "isscorespublish": true,
+        "scoreentrypoints": 5,
+        "weight": 1,
+        "isscoringneeded": true,
+        "sectionsdcid": 654000,
+        "totalpointvalue": 5,
+        "assignmentsectionid": 2534878,
+        "iscountedinfinalgrade": true,
+        "duedate": "2025-10-30",
+        "_assignmentscores": [
+          {
+            "scorepoints": 5,
+            "islate": false,
+            "_name": "assignmentscore",
+            "isexempt": false,
+            "studentsdcid": 999999,
+            "scorelettergrade": "A",
+            "isabsent": false,
+            "ismissing": false,
+            "isincomplete": false,
+            "whenmodified": "2025-11-10",
+            "iscollected": false,
+            "actualscorekind": "REAL_SCORE",
+            "authoredbyuc": false,
+            "scoreentrydate": "2025-11-10 22:19:51",
+            "actualscoreentered": "100",
+            "scorepercent": 100
+          }
+        ],
+        "name": "Pre-Reading #5",
+        "scoretype": "PERCENT",
+        "_id": 2534878,
+        "_assignmentcategoryassociations": [
+          {
+            "assignmentcategoryassocid": 2534588,
+            "_name": "assignmentcategoryassoc",
+            "_teachercategory": {
+              "_name": "teachercategory",
+              "color": "4",
+              "name": "Pre - Reading"
+            },
+            "_id": 2534588,
+            "isprimary": true
+          }
+        ]
+      }
+    ],
+    "_id": 1130841,
+    "hasstandards": false,
+    "standardscoringmethod": "GradeScale",
+    "assignmentid": 1130841
+  },
+  {
+    "_name": "assignment",
+    "_assignmentsections": [
+      {
+        "_name": "assignmentsection",
+        "isscorespublish": true,
+        "scoreentrypoints": 10,
+        "weight": 1,
+        "isscoringneeded": true,
+        "sectionsdcid": 654000,
+        "totalpointvalue": 10,
+        "assignmentsectionid": 2586458,
+        "iscountedinfinalgrade": true,
+        "duedate": "2025-11-28",
+        "_assignmentscores": [
+          {
+            "scorepoints": 5,
+            "islate": false,
+            "_name": "assignmentscore",
+            "isexempt": false,
+            "studentsdcid": 999999,
+            "scorelettergrade": "E",
+            "isabsent": false,
+            "ismissing": true,
+            "isincomplete": false,
+            "whenmodified": "2025-12-15",
+            "iscollected": false,
+            "actualscorekind": "SCORE_CODE",
+            "authoredbyuc": false,
+            "scoreentrydate": "2025-12-15 16:15:59",
+            "actualscoreentered": "IE",
+            "scorepercent": 50
+          }
+        ],
+        "name": "Warm-Ups 11/24-11/28",
+        "scoretype": "PERCENT",
+        "_id": 2586458,
+        "_assignmentcategoryassociations": [
+          {
+            "assignmentcategoryassocid": 2586169,
+            "_name": "assignmentcategoryassoc",
+            "_teachercategory": {
+              "_name": "teachercategory",
+              "color": "7",
+              "name": "Warm Ups"
+            },
+            "_id": 2586169,
+            "isprimary": true
+          }
+        ]
+      }
+    ],
+    "_id": 1156516,
+    "hasstandards": false,
+    "standardscoringmethod": "GradeScale",
+    "assignmentid": 1156516
+  },
+  {
+    "_name": "assignment",
+    "_assignmentsections": [
+      {
+        "_name": "assignmentsection",
+        "isscorespublish": true,
+        "scoreentrypoints": 15,
+        "weight": 1,
+        "isscoringneeded": true,
+        "sectionsdcid": 654000,
+        "totalpointvalue": 15,
+        "assignmentsectionid": 2586003,
+        "iscountedinfinalgrade": true,
+        "duedate": "2025-12-02",
+        "_assignmentscores": [
+          {
+            "scorepoints": 15,
+            "islate": false,
+            "_name": "assignmentscore",
+            "isexempt": false,
+            "studentsdcid": 999999,
+            "scorelettergrade": "A",
+            "isabsent": false,
+            "ismissing": false,
+            "isincomplete": false,
+            "whenmodified": "2025-12-15",
+            "iscollected": false,
+            "actualscorekind": "REAL_SCORE",
+            "authoredbyuc": false,
+            "scoreentrydate": "2025-12-15 15:24:53",
+            "actualscoreentered": "100",
+            "scorepercent": 100
+          }
+        ],
+        "name": "Graphing Pre-Assessment",
+        "scoretype": "PERCENT",
+        "_id": 2586003,
+        "_assignmentcategoryassociations": [
+          {
+            "assignmentcategoryassocid": 2585714,
+            "_name": "assignmentcategoryassoc",
+            "_teachercategory": {
+              "_name": "teachercategory",
+              "color": "1",
+              "name": "Classwork",
+              "description": "This Category is for High and Middle Schools only who use Point calculations"
+            },
+            "_id": 2585714,
+            "isprimary": true
+          }
+        ]
+      }
+    ],
+    "_id": 1156331,
+    "hasstandards": false,
+    "standardscoringmethod": "GradeScale",
+    "assignmentid": 1156331
+  },
+  {
+    "_name": "assignment",
+    "_assignmentsections": [
+      {
+        "_name": "assignmentsection",
+        "isscorespublish": true,
+        "scoreentrypoints": 10,
+        "weight": 1,
+        "isscoringneeded": true,
+        "sectionsdcid": 654000,
+        "totalpointvalue": 10,
+        "assignmentsectionid": 2438154,
+        "iscountedinfinalgrade": true,
+        "duedate": "2025-09-15",
+        "_assignmentscores": [
+          {
+            "iscollected": true,
+            "islate": false,
+            "_name": "assignmentscore",
+            "authoredbyuc": false,
+            "isexempt": false,
+            "studentsdcid": 999999,
+            "scoreentrydate": "2025-09-21 17:16:37",
+            "isabsent": false,
+            "ismissing": false,
+            "isincomplete": false,
+            "whenmodified": "2025-09-21"
+          }
+        ],
+        "name": "Syllabus",
+        "scoretype": "COLLECTED",
+        "_id": 2438154,
+        "_assignmentcategoryassociations": [
+          {
+            "assignmentcategoryassocid": 2437812,
+            "_name": "assignmentcategoryassoc",
+            "_teachercategory": {
+              "_name": "teachercategory",
+              "color": "3",
+              "name": "Participation"
+            },
+            "_id": 2437812,
+            "isprimary": true
+          }
+        ]
+      }
+    ],
+    "_id": 1083168,
+    "hasstandards": false,
+    "standardscoringmethod": "GradeScale",
+    "assignmentid": 1083168
+  },
+  {
+    "_name": "assignment",
+    "_assignmentsections": [
+      {
+        "_name": "assignmentsection",
+        "isscorespublish": true,
+        "scoreentrypoints": 30,
+        "weight": 1,
+        "isscoringneeded": true,
+        "sectionsdcid": 654000,
+        "totalpointvalue": 30,
+        "assignmentsectionid": 2492518,
+        "iscountedinfinalgrade": true,
+        "duedate": "2025-10-01",
+        "_assignmentscores": [
+          {
+            "scorepoints": 30,
+            "islate": false,
+            "_name": "assignmentscore",
+            "isexempt": false,
+            "studentsdcid": 999999,
+            "scorelettergrade": "A",
+            "isabsent": false,
+            "ismissing": false,
+            "isincomplete": false,
+            "whenmodified": "2025-10-16",
+            "iscollected": false,
+            "actualscorekind": "REAL_SCORE",
+            "authoredbyuc": false,
+            "scoreentrydate": "2025-10-16 16:17:06",
+            "actualscoreentered": "100",
+            "scorepercent": 100
+          }
+        ],
+        "name": "Patient 23 Case Study Part 2",
+        "scoretype": "PERCENT",
+        "_id": 2492518,
+        "_assignmentcategoryassociations": [
+          {
+            "assignmentcategoryassocid": 2492196,
+            "_name": "assignmentcategoryassoc",
+            "_teachercategory": {
+              "_name": "teachercategory",
+              "color": "1",
+              "name": "Classwork",
+              "description": "This Category is for High and Middle Schools only who use Point calculations"
+            },
+            "_id": 2492196,
+            "isprimary": true
+          }
+        ]
+      }
+    ],
+    "_id": 1109060,
+    "hasstandards": false,
+    "standardscoringmethod": "GradeScale",
+    "assignmentid": 1109060
+  },
+  {
+    "_name": "assignment",
+    "_assignmentsections": [
+      {
+        "_name": "assignmentsection",
+        "isscorespublish": true,
+        "scoreentrypoints": 10,
+        "weight": 1,
+        "isscoringneeded": true,
+        "sectionsdcid": 654000,
+        "totalpointvalue": 10,
+        "assignmentsectionid": 2492499,
+        "iscountedinfinalgrade": true,
+        "duedate": "2025-10-03",
+        "_assignmentscores": [
+          {
+            "scorepoints": 10,
+            "islate": false,
+            "_name": "assignmentscore",
+            "isexempt": false,
+            "studentsdcid": 999999,
+            "scorelettergrade": "A",
+            "isabsent": false,
+            "ismissing": false,
+            "isincomplete": false,
+            "whenmodified": "2025-10-16",
+            "iscollected": false,
+            "actualscorekind": "REAL_SCORE",
+            "authoredbyuc": false,
+            "scoreentrydate": "2025-10-16 16:17:06",
+            "actualscoreentered": "100",
+            "scorepercent": 100
+          }
+        ],
+        "name": "Warm-Ups 9/29-10/3",
+        "scoretype": "PERCENT",
+        "_id": 2492499,
+        "_assignmentcategoryassociations": [
+          {
+            "assignmentcategoryassocid": 2492177,
+            "_name": "assignmentcategoryassoc",
+            "_teachercategory": {
+              "_name": "teachercategory",
+              "color": "7",
+              "name": "Warm Ups"
+            },
+            "_id": 2492177,
+            "isprimary": true
+          }
+        ]
+      }
+    ],
+    "_id": 1109056,
+    "hasstandards": false,
+    "standardscoringmethod": "GradeScale",
+    "assignmentid": 1109056
+  },
+  {
+    "_name": "assignment",
+    "_assignmentsections": [
+      {
+        "_name": "assignmentsection",
+        "isscorespublish": true,
+        "scoreentrypoints": 5,
+        "weight": 1,
+        "isscoringneeded": true,
+        "sectionsdcid": 654000,
+        "totalpointvalue": 5,
+        "assignmentsectionid": 2517614,
+        "iscountedinfinalgrade": true,
+        "duedate": "2025-10-08",
+        "_assignmentscores": [
+          {
+            "scorepoints": 5,
+            "islate": false,
+            "_name": "assignmentscore",
+            "isexempt": false,
+            "studentsdcid": 999999,
+            "scorelettergrade": "A",
+            "isabsent": false,
+            "ismissing": false,
+            "isincomplete": false,
+            "whenmodified": "2025-10-31",
+            "iscollected": false,
+            "actualscorekind": "REAL_SCORE",
+            "authoredbyuc": false,
+            "scoreentrydate": "2025-10-31 12:35:19",
+            "actualscoreentered": "100",
+            "scorepercent": 100
+          }
+        ],
+        "name": "Pre reading 4 Molecules Cells Need",
+        "scoretype": "PERCENT",
+        "_id": 2517614,
+        "_assignmentcategoryassociations": [
+          {
+            "assignmentcategoryassocid": 2517310,
+            "_name": "assignmentcategoryassoc",
+            "_teachercategory": {
+              "_name": "teachercategory",
+              "color": "4",
+              "name": "Pre - Reading"
+            },
+            "_id": 2517310,
+            "isprimary": true
+          }
+        ]
+      }
+    ],
+    "_id": 1121987,
+    "hasstandards": false,
+    "standardscoringmethod": "GradeScale",
+    "assignmentid": 1121987
+  },
+  {
+    "_name": "assignment",
+    "_assignmentsections": [
+      {
+        "_name": "assignmentsection",
+        "isscorespublish": true,
+        "scoreentrypoints": 30,
+        "weight": 1,
+        "isscoringneeded": true,
+        "sectionsdcid": 654000,
+        "totalpointvalue": 30,
+        "assignmentsectionid": 2517611,
+        "iscountedinfinalgrade": true,
+        "duedate": "2025-10-09",
+        "_assignmentscores": [
+          {
+            "scorepoints": 15,
+            "islate": false,
+            "_name": "assignmentscore",
+            "isexempt": false,
+            "studentsdcid": 999999,
+            "scorelettergrade": "E",
+            "isabsent": false,
+            "ismissing": true,
+            "isincomplete": false,
+            "whenmodified": "2025-10-31",
+            "iscollected": false,
+            "actualscorekind": "SCORE_CODE",
+            "authoredbyuc": false,
+            "scoreentrydate": "2025-10-31 15:42:47",
+            "actualscoreentered": "IE",
+            "scorepercent": 50
+          }
+        ],
+        "name": "Metabolism Sim",
+        "scoretype": "PERCENT",
+        "_id": 2517611,
+        "_assignmentcategoryassociations": [
+          {
+            "assignmentcategoryassocid": 2517307,
+            "_name": "assignmentcategoryassoc",
+            "_teachercategory": {
+              "_name": "teachercategory",
+              "color": "1",
+              "name": "Classwork",
+              "description": "This Category is for High and Middle Schools only who use Point calculations"
+            },
+            "_id": 2517307,
+            "isprimary": true
+          }
+        ]
+      }
+    ],
+    "_id": 1121986,
+    "hasstandards": false,
+    "standardscoringmethod": "GradeScale",
+    "assignmentid": 1121986
+  },
+  {
+    "_name": "assignment",
+    "_assignmentsections": [
+      {
+        "_name": "assignmentsection",
+        "isscorespublish": true,
+        "scoreentrypoints": 15,
+        "weight": 1,
+        "isscoringneeded": true,
+        "sectionsdcid": 654000,
+        "totalpointvalue": 15,
+        "assignmentsectionid": 2534888,
+        "iscountedinfinalgrade": true,
+        "duedate": "2025-10-27",
+        "_assignmentscores": [
+          {
+            "scorepoints": 15,
+            "islate": false,
+            "_name": "assignmentscore",
+            "isexempt": false,
+            "studentsdcid": 999999,
+            "scorelettergrade": "A",
+            "isabsent": false,
+            "ismissing": false,
+            "isincomplete": false,
+            "whenmodified": "2025-11-10",
+            "iscollected": false,
+            "actualscorekind": "REAL_SCORE",
+            "authoredbyuc": false,
+            "scoreentrydate": "2025-11-10 22:19:51",
+            "actualscoreentered": "100",
+            "scorepercent": 100
+          }
+        ],
+        "name": "Table Name",
+        "scoretype": "PERCENT",
+        "_id": 2534888,
+        "_assignmentcategoryassociations": [
+          {
+            "assignmentcategoryassocid": 2534598,
+            "_name": "assignmentcategoryassoc",
+            "_teachercategory": {
+              "_name": "teachercategory",
+              "color": "1",
+              "name": "Classwork",
+              "description": "This Category is for High and Middle Schools only who use Point calculations"
+            },
+            "_id": 2534598,
+            "isprimary": true
+          }
+        ]
+      }
+    ],
+    "_id": 1130843,
+    "hasstandards": false,
+    "standardscoringmethod": "GradeScale",
+    "assignmentid": 1130843
+  },
+  {
+    "_name": "assignment",
+    "_assignmentsections": [
+      {
+        "_name": "assignmentsection",
+        "isscorespublish": true,
+        "scoreentrypoints": 15,
+        "weight": 1,
+        "isscoringneeded": true,
+        "sectionsdcid": 654000,
+        "totalpointvalue": 15,
+        "assignmentsectionid": 2586021,
+        "iscountedinfinalgrade": true,
+        "duedate": "2025-12-04",
+        "_assignmentscores": [
+          {
+            "scorepoints": 7.5,
+            "islate": false,
+            "_name": "assignmentscore",
+            "isexempt": false,
+            "studentsdcid": 999999,
+            "scorelettergrade": "E",
+            "isabsent": false,
+            "ismissing": true,
+            "isincomplete": false,
+            "whenmodified": "2025-12-15",
+            "iscollected": false,
+            "actualscorekind": "SCORE_CODE",
+            "authoredbyuc": false,
+            "scoreentrydate": "2025-12-15 16:15:59",
+            "actualscoreentered": "IE",
+            "scorepercent": 50
+          }
+        ],
+        "name": "Interpreting Graphs",
+        "scoretype": "PERCENT",
+        "_id": 2586021,
+        "_assignmentcategoryassociations": [
+          {
+            "assignmentcategoryassocid": 2585732,
+            "_name": "assignmentcategoryassoc",
+            "_teachercategory": {
+              "_name": "teachercategory",
+              "color": "1",
+              "name": "Classwork",
+              "description": "This Category is for High and Middle Schools only who use Point calculations"
+            },
+            "_id": 2585732,
+            "isprimary": true
+          }
+        ]
+      }
+    ],
+    "_id": 1156336,
+    "hasstandards": false,
+    "standardscoringmethod": "GradeScale",
+    "assignmentid": 1156336
+  },
+  {
+    "_name": "assignment",
+    "_assignmentsections": [
+      {
+        "_name": "assignmentsection",
+        "isscorespublish": true,
+        "scoreentrypoints": 10,
+        "weight": 1,
+        "isscoringneeded": true,
+        "sectionsdcid": 654000,
+        "totalpointvalue": 10,
+        "assignmentsectionid": 2597637,
+        "iscountedinfinalgrade": true,
+        "duedate": "2026-01-05",
+        "_assignmentscores": [
+          {
+            "iscollected": true,
+            "islate": false,
+            "_name": "assignmentscore",
+            "authoredbyuc": false,
+            "isexempt": false,
+            "studentsdcid": 999999,
+            "scoreentrydate": "2026-01-05 11:22:28",
+            "isabsent": false,
+            "ismissing": false,
+            "isincomplete": false,
+            "whenmodified": "2026-01-05"
+          }
+        ],
+        "name": "2026 Goal Setting",
+        "scoretype": "COLLECTED",
+        "_id": 2597637,
+        "_assignmentcategoryassociations": [
+          {
+            "assignmentcategoryassocid": 2597426,
+            "_name": "assignmentcategoryassoc",
+            "_teachercategory": {
+              "_name": "teachercategory",
+              "color": "1",
+              "name": "Classwork",
+              "description": "This Category is for High and Middle Schools only who use Point calculations"
+            },
+            "_id": 2597426,
+            "isprimary": true
+          }
+        ]
+      }
+    ],
+    "_id": 1162072,
+    "hasstandards": false,
+    "standardscoringmethod": "GradeScale",
+    "assignmentid": 1162072
+  },
+  {
+    "_name": "assignment",
+    "_assignmentsections": [
+      {
+        "_name": "assignmentsection",
+        "isscorespublish": true,
+        "scoreentrypoints": 100,
+        "weight": 1,
+        "isscoringneeded": true,
+        "sectionsdcid": 654000,
+        "totalpointvalue": 100,
+        "assignmentsectionid": 2619861,
+        "iscountedinfinalgrade": true,
+        "duedate": "2025-12-19",
+        "_assignmentscores": [
+          {
+            "iscollected": true,
+            "islate": false,
+            "_name": "assignmentscore",
+            "authoredbyuc": false,
+            "isexempt": false,
+            "studentsdcid": 999999,
+            "scoreentrydate": "2026-01-20 15:47:29",
+            "isabsent": false,
+            "ismissing": false,
+            "isincomplete": false,
+            "whenmodified": "2026-01-20"
+          }
+        ],
+        "name": "Graphing Project",
+        "scoretype": "PERCENT",
+        "_id": 2619861,
+        "_assignmentcategoryassociations": [
+          {
+            "assignmentcategoryassocid": 2619656,
+            "_name": "assignmentcategoryassoc",
+            "_teachercategory": {
+              "_name": "teachercategory",
+              "color": "7",
+              "name": "Project",
+              "description": "This Category is for High and Middle Schools only who use Point calculations"
+            },
+            "_id": 2619656,
+            "isprimary": true
+          }
+        ]
+      }
+    ],
+    "_id": 1173056,
+    "hasstandards": false,
+    "standardscoringmethod": "GradeScale",
+    "assignmentid": 1173056
+  },
+  {
+    "_name": "assignment",
+    "_assignmentsections": [
+      {
+        "_name": "assignmentsection",
+        "isscorespublish": true,
+        "scoreentrypoints": 15,
+        "weight": 1,
+        "isscoringneeded": true,
+        "sectionsdcid": 654000,
+        "totalpointvalue": 15,
+        "assignmentsectionid": 2492444,
+        "iscountedinfinalgrade": true,
+        "duedate": "2025-09-26",
+        "_assignmentscores": [
+          {
+            "scorepoints": 15,
+            "islate": false,
+            "_name": "assignmentscore",
+            "isexempt": false,
+            "studentsdcid": 999999,
+            "scorelettergrade": "A",
+            "isabsent": false,
+            "ismissing": false,
+            "isincomplete": false,
+            "whenmodified": "2025-10-16",
+            "iscollected": false,
+            "actualscorekind": "REAL_SCORE",
+            "authoredbyuc": false,
+            "scoreentrydate": "2025-10-16 16:17:06",
+            "actualscoreentered": "100",
+            "scorepercent": 100
+          }
+        ],
+        "name": "Patient 23 Case Study",
+        "scoretype": "PERCENT",
+        "_id": 2492444,
+        "_assignmentcategoryassociations": [
+          {
+            "assignmentcategoryassocid": 2492122,
+            "_name": "assignmentcategoryassoc",
+            "_teachercategory": {
+              "_name": "teachercategory",
+              "color": "1",
+              "name": "Classwork",
+              "description": "This Category is for High and Middle Schools only who use Point calculations"
+            },
+            "_id": 2492122,
+            "isprimary": true
+          }
+        ]
+      }
+    ],
+    "_id": 1109030,
+    "hasstandards": false,
+    "standardscoringmethod": "GradeScale",
+    "assignmentid": 1109030
+  },
+  {
+    "_name": "assignment",
+    "_assignmentsections": [
+      {
+        "_name": "assignmentsection",
+        "isscorespublish": true,
+        "scoreentrypoints": 30,
+        "weight": 1,
+        "isscoringneeded": true,
+        "sectionsdcid": 654000,
+        "totalpointvalue": 30,
+        "assignmentsectionid": 2517627,
+        "iscountedinfinalgrade": true,
+        "duedate": "2025-10-15",
+        "_assignmentscores": [
+          {
+            "scorepoints": 30,
+            "islate": false,
+            "_name": "assignmentscore",
+            "isexempt": false,
+            "studentsdcid": 999999,
+            "scorelettergrade": "A",
+            "isabsent": false,
+            "ismissing": false,
+            "isincomplete": false,
+            "whenmodified": "2025-10-31",
+            "iscollected": false,
+            "actualscorekind": "REAL_SCORE",
+            "authoredbyuc": false,
+            "scoreentrydate": "2025-10-31 12:35:19",
+            "actualscoreentered": "100",
+            "scorepercent": 100
+          }
+        ],
+        "name": "Evaluating Evidence",
+        "scoretype": "PERCENT",
+        "_id": 2517627,
+        "_assignmentcategoryassociations": [
+          {
+            "assignmentcategoryassocid": 2517323,
+            "_name": "assignmentcategoryassoc",
+            "_teachercategory": {
+              "_name": "teachercategory",
+              "color": "1",
+              "name": "Classwork",
+              "description": "This Category is for High and Middle Schools only who use Point calculations"
+            },
+            "_id": 2517323,
+            "isprimary": true
+          }
+        ]
+      }
+    ],
+    "_id": 1121990,
+    "hasstandards": false,
+    "standardscoringmethod": "GradeScale",
+    "assignmentid": 1121990
+  },
+  {
+    "_name": "assignment",
+    "_assignmentsections": [
+      {
+        "_name": "assignmentsection",
+        "isscorespublish": true,
+        "scoreentrypoints": 15,
+        "weight": 1,
+        "isscoringneeded": true,
+        "sectionsdcid": 654000,
+        "totalpointvalue": 15,
+        "assignmentsectionid": 2534871,
+        "iscountedinfinalgrade": true,
+        "duedate": "2025-10-22",
+        "_assignmentscores": [
+          {
+            "scorepoints": 15,
+            "islate": false,
+            "_name": "assignmentscore",
+            "isexempt": false,
+            "studentsdcid": 999999,
+            "scorelettergrade": "A",
+            "isabsent": false,
+            "ismissing": false,
+            "isincomplete": false,
+            "whenmodified": "2025-11-10",
+            "iscollected": false,
+            "actualscorekind": "REAL_SCORE",
+            "authoredbyuc": false,
+            "scoreentrydate": "2025-11-10 22:19:51",
+            "actualscoreentered": "100",
+            "scorepercent": 100
+          }
+        ],
+        "name": "Body Problems Sim",
+        "scoretype": "PERCENT",
+        "_id": 2534871,
+        "_assignmentcategoryassociations": [
+          {
+            "assignmentcategoryassocid": 2534581,
+            "_name": "assignmentcategoryassoc",
+            "_teachercategory": {
+              "_name": "teachercategory",
+              "color": "1",
+              "name": "Classwork",
+              "description": "This Category is for High and Middle Schools only who use Point calculations"
+            },
+            "_id": 2534581,
+            "isprimary": true
+          }
+        ]
+      }
+    ],
+    "_id": 1130838,
+    "hasstandards": false,
+    "standardscoringmethod": "GradeScale",
+    "assignmentid": 1130838
+  },
+  {
+    "_name": "assignment",
+    "_assignmentsections": [
+      {
+        "_name": "assignmentsection",
+        "isscorespublish": true,
+        "scoreentrypoints": 15,
+        "weight": 1,
+        "isscoringneeded": true,
+        "sectionsdcid": 654000,
+        "totalpointvalue": 15,
+        "assignmentsectionid": 2534883,
+        "iscountedinfinalgrade": true,
+        "duedate": "2025-10-29",
+        "_assignmentscores": [
+          {
+            "scorepoints": 8.25,
+            "islate": false,
+            "_name": "assignmentscore",
+            "isexempt": false,
+            "studentsdcid": 999999,
+            "scorelettergrade": "E",
+            "isabsent": false,
+            "ismissing": false,
+            "isincomplete": false,
+            "whenmodified": "2025-11-10",
+            "iscollected": false,
+            "actualscorekind": "REAL_SCORE",
+            "authoredbyuc": false,
+            "scoreentrydate": "2025-11-10 22:19:51",
+            "actualscoreentered": "55",
+            "scorepercent": 55
+          }
+        ],
+        "name": "Energy Release in the Body",
+        "scoretype": "PERCENT",
+        "_id": 2534883,
+        "_assignmentcategoryassociations": [
+          {
+            "assignmentcategoryassocid": 2534593,
+            "_name": "assignmentcategoryassoc",
+            "_teachercategory": {
+              "_name": "teachercategory",
+              "color": "1",
+              "name": "Classwork",
+              "description": "This Category is for High and Middle Schools only who use Point calculations"
+            },
+            "_id": 2534593,
+            "isprimary": true
+          }
+        ]
+      }
+    ],
+    "_id": 1130842,
+    "hasstandards": false,
+    "standardscoringmethod": "GradeScale",
+    "assignmentid": 1130842
+  },
+  {
+    "_name": "assignment",
+    "_assignmentsections": [
+      {
+        "_name": "assignmentsection",
+        "isscorespublish": true,
+        "scoreentrypoints": 10,
+        "weight": 1,
+        "isscoringneeded": true,
+        "sectionsdcid": 654000,
+        "totalpointvalue": 10,
+        "assignmentsectionid": 2534875,
+        "iscountedinfinalgrade": true,
+        "duedate": "2025-10-31",
+        "_assignmentscores": [
+          {
+            "scorepoints": 8,
+            "islate": false,
+            "_name": "assignmentscore",
+            "isexempt": false,
+            "studentsdcid": 999999,
+            "scorelettergrade": "B-",
+            "isabsent": false,
+            "ismissing": false,
+            "isincomplete": false,
+            "whenmodified": "2025-11-10",
+            "iscollected": false,
+            "actualscorekind": "REAL_SCORE",
+            "authoredbyuc": false,
+            "scoreentrydate": "2025-11-10 22:19:51",
+            "actualscoreentered": "80",
+            "scorepercent": 80
+          }
+        ],
+        "name": "Warm-Ups 10/27-10/31",
+        "scoretype": "PERCENT",
+        "_id": 2534875,
+        "_assignmentcategoryassociations": [
+          {
+            "assignmentcategoryassocid": 2534585,
+            "_name": "assignmentcategoryassoc",
+            "_teachercategory": {
+              "_name": "teachercategory",
+              "color": "7",
+              "name": "Warm Ups"
+            },
+            "_id": 2534585,
+            "isprimary": true
+          }
+        ]
+      }
+    ],
+    "_id": 1130840,
+    "hasstandards": false,
+    "standardscoringmethod": "GradeScale",
+    "assignmentid": 1130840
+  },
+  {
+    "_name": "assignment",
+    "_assignmentsections": [
+      {
+        "_name": "assignmentsection",
+        "isscorespublish": true,
+        "scoreentrypoints": 113,
+        "weight": 1,
+        "isscoringneeded": true,
+        "sectionsdcid": 654000,
+        "totalpointvalue": 113,
+        "assignmentsectionid": 2518329,
+        "iscountedinfinalgrade": true,
+        "duedate": "2025-11-06",
+        "_assignmentscores": [
+          {
+            "scorepoints": 99.44,
+            "islate": false,
+            "_name": "assignmentscore",
+            "isexempt": false,
+            "studentsdcid": 999999,
+            "scorelettergrade": "B+",
+            "isabsent": false,
+            "ismissing": false,
+            "isincomplete": false,
+            "whenmodified": "2025-12-01",
+            "iscollected": false,
+            "actualscorekind": "REAL_SCORE",
+            "authoredbyuc": false,
+            "scoreentrydate": "2025-12-01 15:10:51",
+            "actualscoreentered": "88",
+            "scorepercent": 88
+          }
+        ],
+        "name": "Metabolism Quiz",
+        "scoretype": "PERCENT",
+        "_id": 2518329,
+        "_assignmentcategoryassociations": [
+          {
+            "assignmentcategoryassocid": 2518025,
+            "_name": "assignmentcategoryassoc",
+            "_teachercategory": {
+              "_name": "teachercategory",
+              "color": "2",
+              "name": "Assessment"
+            },
+            "_id": 2518025,
+            "isprimary": true
+          }
+        ]
+      }
+    ],
+    "_id": 1122338,
+    "hasstandards": false,
+    "standardscoringmethod": "GradeScale",
+    "assignmentid": 1122338
+  },
+  {
+    "_name": "assignment",
+    "_assignmentsections": [
+      {
+        "_name": "assignmentsection",
+        "isscorespublish": true,
+        "scoreentrypoints": 10,
+        "weight": 1,
+        "isscoringneeded": true,
+        "sectionsdcid": 654000,
+        "totalpointvalue": 10,
+        "assignmentsectionid": 2563870,
+        "iscountedinfinalgrade": true,
+        "duedate": "2025-11-21",
+        "_assignmentscores": [
+          {
+            "scorepoints": 10,
+            "islate": false,
+            "_name": "assignmentscore",
+            "isexempt": false,
+            "studentsdcid": 999999,
+            "scorelettergrade": "A",
+            "isabsent": false,
+            "ismissing": false,
+            "isincomplete": false,
+            "whenmodified": "2025-12-01",
+            "iscollected": false,
+            "actualscorekind": "REAL_SCORE",
+            "authoredbyuc": false,
+            "scoreentrydate": "2025-12-01 15:10:51",
+            "actualscoreentered": "100",
+            "scorepercent": 100
+          }
+        ],
+        "name": "Warm-Ups 11/17-11/21",
+        "scoretype": "PERCENT",
+        "_id": 2563870,
+        "_assignmentcategoryassociations": [
+          {
+            "assignmentcategoryassocid": 2563612,
+            "_name": "assignmentcategoryassoc",
+            "_teachercategory": {
+              "_name": "teachercategory",
+              "color": "7",
+              "name": "Warm Ups"
+            },
+            "_id": 2563612,
+            "isprimary": true
+          }
+        ]
+      }
+    ],
+    "_id": 1145336,
+    "hasstandards": false,
+    "standardscoringmethod": "GradeScale",
+    "assignmentid": 1145336
+  },
+  {
+    "_name": "assignment",
+    "_assignmentsections": [
+      {
+        "_name": "assignmentsection",
+        "isscorespublish": true,
+        "scoreentrypoints": 10,
+        "weight": 1,
+        "isscoringneeded": true,
+        "sectionsdcid": 654000,
+        "totalpointvalue": 10,
+        "assignmentsectionid": 2438144,
+        "iscountedinfinalgrade": true,
+        "duedate": "2025-09-12",
+        "_assignmentscores": [
+          {
+            "scorepoints": 10,
+            "islate": false,
+            "_name": "assignmentscore",
+            "isexempt": false,
+            "studentsdcid": 999999,
+            "scorelettergrade": "A",
+            "isabsent": false,
+            "ismissing": false,
+            "isincomplete": false,
+            "whenmodified": "2025-10-31",
+            "iscollected": false,
+            "actualscorekind": "REAL_SCORE",
+            "authoredbyuc": false,
+            "scoreentrydate": "2025-09-15 21:05:37",
+            "actualscoreentered": "100",
+            "scorepercent": 100
+          }
+        ],
+        "name": "Warm-Ups 9/8-9/12",
+        "scoretype": "PERCENT",
+        "_id": 2438144,
+        "_assignmentcategoryassociations": [
+          {
+            "assignmentcategoryassocid": 2437802,
+            "_name": "assignmentcategoryassoc",
+            "_teachercategory": {
+              "_name": "teachercategory",
+              "color": "7",
+              "name": "Warm Ups"
+            },
+            "_id": 2437802,
+            "isprimary": true
+          }
+        ]
+      }
+    ],
+    "_id": 1083162,
+    "hasstandards": false,
+    "standardscoringmethod": "GradeScale",
+    "assignmentid": 1083162
+  },
+  {
+    "_name": "assignment",
+    "_assignmentsections": [
+      {
+        "_name": "assignmentsection",
+        "isscorespublish": true,
+        "scoreentrypoints": 10,
+        "weight": 1,
+        "isscoringneeded": true,
+        "sectionsdcid": 654000,
+        "totalpointvalue": 10,
+        "assignmentsectionid": 2447960,
+        "iscountedinfinalgrade": true,
+        "duedate": "2025-09-19",
+        "_assignmentscores": [
+          {
+            "scorepoints": 10,
+            "islate": false,
+            "_name": "assignmentscore",
+            "isexempt": false,
+            "studentsdcid": 999999,
+            "scorelettergrade": "A",
+            "isabsent": false,
+            "ismissing": false,
+            "isincomplete": false,
+            "whenmodified": "2025-10-31",
+            "iscollected": false,
+            "actualscorekind": "REAL_SCORE",
+            "authoredbyuc": false,
+            "scoreentrydate": "2025-09-21 17:16:37",
+            "actualscoreentered": "100",
+            "scorepercent": 100
+          }
+        ],
+        "name": "Warm-Ups 9/15-9/19",
+        "scoretype": "PERCENT",
+        "_id": 2447960,
+        "_assignmentcategoryassociations": [
+          {
+            "assignmentcategoryassocid": 2447623,
+            "_name": "assignmentcategoryassoc",
+            "_teachercategory": {
+              "_name": "teachercategory",
+              "color": "7",
+              "name": "Warm Ups"
+            },
+            "_id": 2447623,
+            "isprimary": true
+          }
+        ]
+      }
+    ],
+    "_id": 1087769,
+    "hasstandards": false,
+    "standardscoringmethod": "GradeScale",
+    "assignmentid": 1087769
+  },
+  {
+    "_name": "assignment",
+    "_assignmentsections": [
+      {
+        "_name": "assignmentsection",
+        "isscorespublish": true,
+        "scoreentrypoints": 10,
+        "weight": 1,
+        "isscoringneeded": true,
+        "sectionsdcid": 654000,
+        "totalpointvalue": 10,
+        "assignmentsectionid": 2517621,
+        "iscountedinfinalgrade": true,
+        "duedate": "2025-10-17",
+        "_assignmentscores": [
+          {
+            "scorepoints": 5,
+            "islate": false,
+            "_name": "assignmentscore",
+            "isexempt": false,
+            "studentsdcid": 999999,
+            "scorelettergrade": "E",
+            "isabsent": false,
+            "ismissing": true,
+            "isincomplete": false,
+            "whenmodified": "2025-10-31",
+            "iscollected": false,
+            "actualscorekind": "SCORE_CODE",
+            "authoredbyuc": false,
+            "scoreentrydate": "2025-10-31 15:42:47",
+            "actualscoreentered": "IE",
+            "scorepercent": 50
+          }
+        ],
+        "name": "Warm-Up 10/13-10/17",
+        "scoretype": "PERCENT",
+        "_id": 2517621,
+        "_assignmentcategoryassociations": [
+          {
+            "assignmentcategoryassocid": 2517317,
+            "_name": "assignmentcategoryassoc",
+            "_teachercategory": {
+              "_name": "teachercategory",
+              "color": "7",
+              "name": "Warm Ups"
+            },
+            "_id": 2517317,
+            "isprimary": true
+          }
+        ]
+      }
+    ],
+    "_id": 1121988,
+    "hasstandards": false,
+    "standardscoringmethod": "GradeScale",
+    "assignmentid": 1121988
+  },
+  {
+    "_name": "assignment",
+    "_assignmentsections": [
+      {
+        "_name": "assignmentsection",
+        "isscorespublish": true,
+        "scoreentrypoints": 10,
+        "weight": 1,
+        "isscoringneeded": true,
+        "sectionsdcid": 654000,
+        "totalpointvalue": 10,
+        "assignmentsectionid": 2563864,
+        "iscountedinfinalgrade": true,
+        "duedate": "2025-11-14",
+        "_assignmentscores": [
+          {
+            "scorepoints": 5,
+            "islate": false,
+            "_name": "assignmentscore",
+            "isexempt": false,
+            "studentsdcid": 999999,
+            "scorelettergrade": "E",
+            "isabsent": false,
+            "ismissing": true,
+            "isincomplete": false,
+            "whenmodified": "2025-12-01",
+            "iscollected": false,
+            "actualscorekind": "SCORE_CODE",
+            "authoredbyuc": false,
+            "scoreentrydate": "2025-12-01 15:35:56",
+            "actualscoreentered": "IE",
+            "scorepercent": 50
+          }
+        ],
+        "name": "Warm-Ups 11/10-11/14",
+        "scoretype": "PERCENT",
+        "_id": 2563864,
+        "_assignmentcategoryassociations": [
+          {
+            "assignmentcategoryassocid": 2563606,
+            "_name": "assignmentcategoryassoc",
+            "_teachercategory": {
+              "_name": "teachercategory",
+              "color": "7",
+              "name": "Warm Ups"
+            },
+            "_id": 2563606,
+            "isprimary": true
+          }
+        ]
+      }
+    ],
+    "_id": 1145333,
+    "hasstandards": false,
+    "standardscoringmethod": "GradeScale",
+    "assignmentid": 1145333
+  },
+  {
+    "_name": "assignment",
+    "_assignmentsections": [
+      {
+        "_name": "assignmentsection",
+        "isscorespublish": true,
+        "scoreentrypoints": 10,
+        "weight": 1,
+        "isscoringneeded": true,
+        "sectionsdcid": 654000,
+        "totalpointvalue": 10,
+        "assignmentsectionid": 2586015,
+        "iscountedinfinalgrade": true,
+        "duedate": "2025-12-03",
+        "_assignmentscores": [
+          {
+            "scorepoints": 6,
+            "islate": false,
+            "_name": "assignmentscore",
+            "isexempt": false,
+            "studentsdcid": 999999,
+            "scorelettergrade": "D",
+            "isabsent": false,
+            "ismissing": false,
+            "isincomplete": false,
+            "whenmodified": "2025-12-15",
+            "iscollected": false,
+            "actualscorekind": "REAL_SCORE",
+            "authoredbyuc": false,
+            "scoreentrydate": "2025-12-15 15:24:53",
+            "actualscoreentered": "60",
+            "scorepercent": 60
+          }
+        ],
+        "name": "Warm-Ups 12/1-12/5",
+        "scoretype": "PERCENT",
+        "_id": 2586015,
+        "_assignmentcategoryassociations": [
+          {
+            "assignmentcategoryassocid": 2585726,
+            "_name": "assignmentcategoryassoc",
+            "_teachercategory": {
+              "_name": "teachercategory",
+              "color": "7",
+              "name": "Warm Ups"
+            },
+            "_id": 2585726,
+            "isprimary": true
+          }
+        ]
+      }
+    ],
+    "_id": 1156334,
+    "hasstandards": false,
+    "standardscoringmethod": "GradeScale",
+    "assignmentid": 1156334
+  },
+  {
+    "_name": "assignment",
+    "_assignmentsections": [
+      {
+        "_name": "assignmentsection",
+        "isscorespublish": true,
+        "description": "<p>Due 9/11</p>",
+        "scoreentrypoints": 30,
+        "weight": 1,
+        "isscoringneeded": true,
+        "sectionsdcid": 654000,
+        "totalpointvalue": 30,
+        "assignmentsectionid": 2438139,
+        "iscountedinfinalgrade": true,
+        "duedate": "2025-09-15",
+        "_assignmentscores": [
+          {
+            "iscollected": false,
+            "islate": false,
+            "_name": "assignmentscore",
+            "authoredbyuc": false,
+            "isexempt": true,
+            "studentsdcid": 999999,
+            "scoreentrydate": "2025-10-01 13:58:14",
+            "isabsent": false,
+            "ismissing": false,
+            "isincomplete": false,
+            "whenmodified": "2025-10-01"
+          }
+        ],
+        "name": "Science Vibe Check Part 2",
+        "scoretype": "PERCENT",
+        "_id": 2438139,
+        "_assignmentcategoryassociations": [
+          {
+            "assignmentcategoryassocid": 2437797,
+            "_name": "assignmentcategoryassoc",
+            "_teachercategory": {
+              "_name": "teachercategory",
+              "color": "1",
+              "name": "Classwork",
+              "description": "This Category is for High and Middle Schools only who use Point calculations"
+            },
+            "_id": 2437797,
+            "isprimary": true
+          }
+        ]
+      }
+    ],
+    "_id": 1083161,
+    "hasstandards": false,
+    "standardscoringmethod": "GradeScale",
+    "assignmentid": 1083161
+  },
+  {
+    "_name": "assignment",
+    "_assignmentsections": [
+      {
+        "_name": "assignmentsection",
+        "isscorespublish": true,
+        "scoreentrypoints": 10,
+        "weight": 1,
+        "isscoringneeded": true,
+        "sectionsdcid": 654000,
+        "totalpointvalue": 10,
+        "assignmentsectionid": 2492437,
+        "iscountedinfinalgrade": true,
+        "duedate": "2025-09-26",
+        "_assignmentscores": [
+          {
+            "scorepoints": 10,
+            "islate": false,
+            "_name": "assignmentscore",
+            "isexempt": false,
+            "studentsdcid": 999999,
+            "scorelettergrade": "A",
+            "isabsent": false,
+            "ismissing": false,
+            "isincomplete": false,
+            "whenmodified": "2025-10-16",
+            "iscollected": false,
+            "actualscorekind": "REAL_SCORE",
+            "authoredbyuc": false,
+            "scoreentrydate": "2025-10-16 16:17:06",
+            "actualscoreentered": "100",
+            "scorepercent": 100
+          }
+        ],
+        "name": "Warm-Ups 9/22-9/26",
+        "scoretype": "PERCENT",
+        "_id": 2492437,
+        "_assignmentcategoryassociations": [
+          {
+            "assignmentcategoryassocid": 2492115,
+            "_name": "assignmentcategoryassoc",
+            "_teachercategory": {
+              "_name": "teachercategory",
+              "color": "7",
+              "name": "Warm Ups"
+            },
+            "_id": 2492115,
+            "isprimary": true
+          }
+        ]
+      }
+    ],
+    "_id": 1109027,
+    "hasstandards": false,
+    "standardscoringmethod": "GradeScale",
+    "assignmentid": 1109027
+  },
+  {
+    "_name": "assignment",
+    "_assignmentsections": [
+      {
+        "_name": "assignmentsection",
+        "isscorespublish": true,
+        "scoreentrypoints": 70,
+        "weight": 1,
+        "isscoringneeded": true,
+        "sectionsdcid": 654000,
+        "totalpointvalue": 70,
+        "assignmentsectionid": 2492564,
+        "iscountedinfinalgrade": true,
+        "duedate": "2025-10-03",
+        "_assignmentscores": [
+          {
+            "scorepoints": 70,
+            "islate": false,
+            "_name": "assignmentscore",
+            "isexempt": false,
+            "studentsdcid": 999999,
+            "scorelettergrade": "A",
+            "isabsent": false,
+            "ismissing": false,
+            "isincomplete": false,
+            "whenmodified": "2025-11-11",
+            "iscollected": true,
+            "actualscorekind": "REAL_SCORE",
+            "authoredbyuc": false,
+            "scoreentrydate": "2025-11-11 09:56:21",
+            "actualscoreentered": "100",
+            "scorepercent": 100
+          }
+        ],
+        "name": "Microbiome Final Argument",
+        "scoretype": "PERCENT",
+        "_id": 2492564,
+        "_assignmentcategoryassociations": [
+          {
+            "assignmentcategoryassocid": 2492242,
+            "_name": "assignmentcategoryassoc",
+            "_teachercategory": {
+              "_name": "teachercategory",
+              "color": "2",
+              "name": "Assessment"
+            },
+            "_id": 2492242,
+            "isprimary": true
+          }
+        ]
+      }
+    ],
+    "_id": 1109078,
+    "hasstandards": false,
+    "standardscoringmethod": "GradeScale",
+    "assignmentid": 1109078
+  }
+]

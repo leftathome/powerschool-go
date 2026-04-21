@@ -1,0 +1,67 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+coverage.txt
+coverage.html
+
+# Dependency directories
+vendor/
+
+# Go workspace file
+go.work
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment files (NEVER commit these - contain credentials!)
+.env
+.env.local
+.env.*.local
+*.env
+
+# Session files (contain sensitive data)
+*session*.json
+*.session
+
+# Build artifacts
+dist/
+build/
+bin/
+
+# Test cache
+.cache/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Debug files
+debug.log
+*.pprof
+
+# Playwright MCP / endpoint-discovery captures — may contain real student data
+.playwright-mcp/
+.playwright-captures/
+*.har
+
+# Redactor config — maps real names/UIDs/emails to placeholders and MUST stay local.
+# See hack/redact.config.example.json for the schema.
+hack/redact.config.json
+
+# Claude Code working directory (agent worktrees etc.)
+.claude/
