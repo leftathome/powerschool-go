@@ -16,6 +16,10 @@ type Client struct {
 	session     *Session
 	httpClient  *http.Client
 	logger      *Logger
+
+	// httpPages routes post-login page reads through httpClient instead of
+	// a headless browser. See WithHTTPPageFetch.
+	httpPages bool
 }
 
 // Option configures the Client

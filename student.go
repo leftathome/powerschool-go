@@ -68,6 +68,10 @@ func (c *Client) getPageHTMLWithWait(ctx context.Context, path string, waitTime 
 		return "", ErrSessionExpired
 	}
 
+	if c.httpPages {
+		return c.getPageHTMLOverHTTP(ctx, path)
+	}
+
 	fullURL := c.buildURL(path)
 
 	c.logger.Debug("Fetching page: %s (wait: %v)", fullURL, waitTime)
@@ -249,6 +253,10 @@ func extractValueAfterLabel(s *goquery.Selection, text string) string {
 // For now, we'll just update subsequent requests to include the student ID
 func (c *Client) SwitchStudent(ctx context.Context, studentID string) error {
 	c.logger.Info("Switching to student ID: %s", studentID)
+
+	if c.httpPages {
+		return errBrowserDisabled("SwitchStudent")
+	}
 
 	// The switchStudent JavaScript likely sets a session variable
 	// We can simulate this by navigating to a page with the student context

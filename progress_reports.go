@@ -48,6 +48,10 @@ func (c *Client) getPageHTMLFromURL(ctx context.Context, url string) (string, er
 		return "", ErrSessionExpired
 	}
 
+	if c.httpPages {
+		return "", errBrowserDisabled("GetProgressReports")
+	}
+
 	c.logger.Debug("Fetching page: %s", url)
 
 	// Use browser automation to get the page content with session cookies
