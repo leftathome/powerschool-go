@@ -7,15 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Proposed as 0.2.0: several changes below alter behaviour callers could have
-relied on. The page structure they depend on (the `li.selected` marker, the
-switcher form, server-rendered `tblgrades`) was confirmed against a live
-instance; the code paths themselves have only been run against synthetic
-fixtures. See [docs/SWITCH_STUDENT.md](docs/SWITCH_STUDENT.md) for what is
-still unconfirmed.
+## [0.2.0] - 2026-10-09
+
+Several changes below alter behaviour callers could have relied on -- in
+particular `GetGrades(ctx, id)` now submits the portal's switch-student form
+(an HTTP POST) when `id` is not the selected student, in browser mode as well
+as HTTP mode.
+
+Verified against a live two-student parent account on 2026-10-09: HTTP page
+fetch with explicitly attached cookies; `SelectStudent` in both directions,
+with the page confirming the selection each time; no cookie rotation on
+switch; selection is per session (an independent login still saw its own
+default); a course's `scores.html` reflects the SESSION's selected student,
+not the course link, and carries a distinct id per student. One further
+observation, seen once: a second login appeared to invalidate the first
+session. See [docs/SWITCH_STUDENT.md](docs/SWITCH_STUDENT.md) for what is
+still unconfirmed (single-student accounts, real session lifetime).
 
 ### Fixed
 
+- A redirect was read as a dead session whenever the status was any 3xx.
+  Only a redirect whose `Location` is under `/public/` (or a 401/403) counts
+  now; a 304 or a redirect elsewhere no longer discards a working session.
 - **One student's details could be attached to another student.**
   `GetStudents` copied the page-level details (student number, grade level,
   school) onto `students[0]` whenever the page carried no

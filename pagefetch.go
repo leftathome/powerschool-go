@@ -102,9 +102,24 @@ func (c *Client) getPageHTMLOverHTTP(ctx context.Context, path string) (string, 
 // isLoginRedirect reports whether resp is, or was redirected to, the
 // public login page. PowerSchool answers an expired session with a 302 to
 // /public/..., which an http.Client follows to a 200.
+//
+// Only a redirect whose Location points at the signed-out area counts. A
+// bare 3xx (a 304, a redirect with no Location, a redirect elsewhere) is not
+// evidence of a dead session, and treating it as one discards a good session.
 func isLoginRedirect(resp *http.Response) bool {
-	if resp.StatusCode >= 300 && resp.StatusCode < 400 {
+	if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden {
 		return true
+	}
+	if resp.StatusCode >= 300 && resp.StatusCode < 400 {
+		loc := resp.Header.Get("Location")
+		if loc == "" {
+			return false
+		}
+		u, err := url.Parse(loc)
+		if err != nil {
+			return false
+		}
+		return isPublicPath(u.Path)
 	}
 	if resp.Request != nil && resp.Request.URL != nil {
 		return isPublicPath(resp.Request.URL.Path)
