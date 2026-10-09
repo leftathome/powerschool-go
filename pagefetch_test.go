@@ -15,8 +15,7 @@ import (
 // one table#tblgrades row. Nothing in it comes from a real instance.
 const syntheticHomePage = `<!doctype html><html><body>
 <ul id="students-list">
-  <li class="selected"><a href="javascript:switchStudent(111111);">Student One</a></li>
-  <li><a href="javascript:switchStudent(111112);">Student Two</a></li>
+<li class="selected"><a href="javascript:switchStudent(111111);">Student One</a></li><li ><a href="javascript:switchStudent(111112);">Student Two</a></li>
 </ul>
 <table class="student-demo"><tr><td class="lbl">Student ID #:</td><td>9000001</td></tr></table>
 <table id="tblgrades">
@@ -143,9 +142,6 @@ func TestHTTPPageFetch_BrowserOnlyCallsRefuse(t *testing.T) {
 	}))
 	ctx := context.Background()
 
-	if err := client.SwitchStudent(ctx, "111112"); err == nil {
-		t.Error("SwitchStudent succeeded in HTTP page mode")
-	}
 	if _, err := client.GetProgressReports(ctx, "111111"); err == nil {
 		t.Error("GetProgressReports succeeded in HTTP page mode")
 	}

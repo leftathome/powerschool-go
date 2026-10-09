@@ -8,9 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 Proposed as 0.2.0: several changes below alter behaviour callers could have
-relied on. Nothing here has been run against a live instance; see
-[docs/SWITCH_STUDENT_CAPTURE.md](docs/SWITCH_STUDENT_CAPTURE.md) for what a
-live session still has to confirm.
+relied on. The page structure they depend on (the `li.selected` marker, the
+switcher form, server-rendered `tblgrades`) was confirmed against a live
+instance; the code paths themselves have only been run against synthetic
+fixtures. See [docs/SWITCH_STUDENT.md](docs/SWITCH_STUDENT.md) for what is
+still unconfirmed.
 
 ### Fixed
 
@@ -22,12 +24,16 @@ live session still has to confirm.
   second child's data was reported under the first child's id. The library
   no longer guesses: only an explicit marker selects a student, and without
   one nobody is enriched.
-- `SwitchStudent` reported success without switching anything. It now
-  returns `ErrSwitchStudentUnsupported` and makes no request.
-- `GetGrades(ctx, studentID)` ignored `studentID` and returned the selected
-  student's grades under any id. A non-empty `studentID` is now checked
-  against the page's explicit marker (`ErrStudentNotSelected`,
-  `ErrSelectionUnknown`); pass `""` for "whoever is selected".
+- **`SwitchStudent` reported success without switching anything**, and
+  `GetGrades(ctx, studentID)` ignored `studentID`, so "switch, then read"
+  returned the previously selected student's grades under the new id.
+  `SwitchStudent` / `SelectStudent` now submit the portal's own switcher
+  form (`POST /guardian/home.html`, the single field
+  `selected_student_id`), read the home page again and require it to mark
+  the requested student as selected (`ErrSwitchNotConfirmed` otherwise;
+  `ErrSelectionUnknown` and nothing posted when the page carries no
+  marker). `GetGrades` switches first when needed and returns grades only
+  from the page that confirmed the selection.
 - A dead session answered with HTTP 200 and the sign-in form (no redirect)
   was parsed as a page with no students. Page reads and the assignment
   lookup now report it as a session-expired `*Error`.
@@ -36,21 +42,30 @@ live session still has to confirm.
   `http.Client` errors carried the full URL with `frn` and `schoolid`.
   Unexpected statuses are reported as `*HTTPStatusError` (operation, status,
   body length).
+- INFO log lines no longer contain student ids, course ids or report
+  titles.
 
 ### Added
 
 - `WithHTTPPageFetch` / `SetHTTPPageFetch` / `UsesHTTPPageFetch`: route
   post-login page reads through the client's `http.Client` as plain GETs
   instead of a headless browser, so a caller's transport sees every request.
+  Session cookies are attached to each request explicitly; no cookie jar is
+  involved.
 - `GetHomePage`: students and grades from a single fetch of the home page.
+- `SelectStudent`: switch (if needed), confirm, and return that student's
+  home page.
 - `Student.Selected`, `Grade.StudentID` (the selected student's id as parsed
   from the grade's own page), `HomePage.SelectedStudent`.
-- `AssignmentLookupPath`, the one path the library POSTs to after login.
+- `AssignmentLookupPath`, `SwitchStudentPath`, `SwitchStudentField`: the two
+  requests the library POSTs after login, for callers that allowlist them.
 
 ### Changed
 
 - `GetStudents` lists each student once even when the switcher is rendered
   more than once on the page.
+- Because a switch changes the session's selected student, calls for
+  different students must not run concurrently on one session.
 
 ## [0.1.2] - 2026-10-09
 

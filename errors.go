@@ -43,9 +43,10 @@ var (
 	// selected than the one asked for.
 	ErrStudentNotSelected = errors.New("the requested student is not the one the session has selected")
 
-	// ErrSwitchStudentUnsupported is returned by SwitchStudent: switching
-	// the session to another student is not implemented.
-	ErrSwitchStudentUnsupported = errors.New("switching students is not implemented")
+	// ErrSwitchNotConfirmed indicates the student-switch form was posted
+	// but the page read afterwards does not mark the requested student as
+	// selected.
+	ErrSwitchNotConfirmed = errors.New("student switch was not confirmed by the page")
 )
 
 // HTTPStatusError reports an unexpected HTTP status. It carries the status

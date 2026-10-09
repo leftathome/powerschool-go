@@ -293,16 +293,3 @@ func extractValueAfterLabel(s *goquery.Selection, text string) string {
 
 	return ""
 }
-
-// SwitchStudent is not implemented and always returns
-// ErrSwitchStudentUnsupported without contacting the portal.
-//
-// Earlier versions loaded the home page and reported success without
-// switching anything, so a caller that "switched" and then called GetGrades
-// read the previously selected student under the new student's id. What the
-// portal's switchStudent() control actually sends has not been captured
-// (see docs/SWITCH_STUDENT_CAPTURE.md); until it has, the only student this
-// library can read is the one the session already has selected.
-func (c *Client) SwitchStudent(ctx context.Context, studentID string) error {
-	return ErrSwitchStudentUnsupported
-}

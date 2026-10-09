@@ -14,7 +14,7 @@ import (
 // These are PDFs organized by academic year
 // URL pattern: https://psplugin.example.org/ProgressReports/Reports/Index?studentidentifier=[STUDENT_ID]
 func (c *Client) GetProgressReports(ctx context.Context, studentID string) ([]*ProgressReport, error) {
-	c.logger.Info("Fetching progress reports for student: %s", studentID)
+	c.logger.Info("Fetching progress reports")
 
 	// Ensure we're authenticated
 	if err := c.ensureAuthenticated(ctx); err != nil {
@@ -120,7 +120,7 @@ func parseProgressReports(html string, studentID string) ([]*ProgressReport, err
 // DownloadProgressReport downloads a progress report PDF
 // Returns the PDF content as bytes
 func (c *Client) DownloadProgressReport(ctx context.Context, report *ProgressReport) ([]byte, error) {
-	c.logger.Info("Downloading progress report: %s", report.Title)
+	c.logger.Info("Downloading a progress report")
 
 	// TODO: Implement PDF download using session cookies
 	// This would use HTTP client with cookies to download the PDF

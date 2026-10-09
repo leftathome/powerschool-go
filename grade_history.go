@@ -14,7 +14,7 @@ import (
 // This shows all completed courses with final grades
 // URL: https://ps.example.org/guardian/termgrades.html
 func (c *Client) GetGradeHistory(ctx context.Context, studentID string) ([]*HistoricalGrade, error) {
-	c.logger.Info("Fetching grade history for student: %s", studentID)
+	c.logger.Info("Fetching grade history")
 
 	// Ensure we're authenticated
 	if err := c.ensureAuthenticated(ctx); err != nil {
@@ -42,7 +42,7 @@ func (c *Client) GetGradeHistory(ctx context.Context, studentID string) ([]*Hist
 // CalculateGPAFromHistory calculates GPA from historical grades
 // Only includes grades that have IncludedInGPA = true
 func (c *Client) CalculateGPAFromHistory(ctx context.Context, studentID string) (*GPA, error) {
-	c.logger.Info("Calculating GPA from grade history for student: %s", studentID)
+	c.logger.Info("Calculating GPA from grade history")
 
 	history, err := c.GetGradeHistory(ctx, studentID)
 	if err != nil {

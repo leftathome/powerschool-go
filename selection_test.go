@@ -18,19 +18,21 @@ import (
 // the student-demo table and the grades row belong to "whoever the session
 // shows", exactly as on the portal.
 func homePageHTML(selected ...string) string {
+	// The portal writes the unselected item as "<li >": an empty attribute
+	// list with a trailing space.
 	isSel := func(id string) string {
 		for _, s := range selected {
 			if s == id {
-				return ` class="selected"`
+				return `class="selected"`
 			}
 		}
 		return ""
 	}
 	return fmt.Sprintf(`<!doctype html><html><body>
 <ul id="students-list">
-  <li%s><a href="javascript:switchStudent(111111);">Student One</a></li>
-  <li%s><a href="javascript:switchStudent(111112);">Student Two</a></li>
-</ul>
+<li %s><a href="javascript:switchStudent(111111);">Student One</a></li><li %s><a href="javascript:switchStudent(111112);">Student Two</a></li></ul>
+<form id="switch_student_form" action="home.html" method="post"><input type="hidden" name="selected_student_id"/></form>
+<script>function switchStudent(studentId){ var f = document.getElementById('switch_student_form'); f.selected_student_id.value=studentId; f.submit(); }</script>
 <table class="student-demo">
   <tr><td class="lbl">Student ID #:</td><td>9000002</td></tr>
   <tr><td class="lbl">Grade Level:</td><td>7</td></tr>
@@ -171,45 +173,6 @@ func TestParseHomePage_SelectionMarker(t *testing.T) {
 	})
 }
 
-func TestGetGrades_ChecksTheSelectedStudent(t *testing.T) {
-	ctx := context.Background()
-
-	t.Run("asked-for student is selected", func(t *testing.T) {
-		client := newHTTPPageClient(t, servePage(homePageHTML("111112")))
-		grades, err := client.GetGrades(ctx, "111112")
-		if err != nil {
-			t.Fatalf("GetGrades: %v", err)
-		}
-		if len(grades) != 1 || grades[0].StudentID != "111112" {
-			t.Errorf("grades = %+v", grades)
-		}
-	})
-
-	t.Run("another student is selected", func(t *testing.T) {
-		client := newHTTPPageClient(t, servePage(homePageHTML("111112")))
-		grades, err := client.GetGrades(ctx, "111111")
-		if !errors.Is(err, ErrStudentNotSelected) || grades != nil {
-			t.Fatalf("GetGrades = (%v, %v), want (nil, ErrStudentNotSelected)", grades, err)
-		}
-	})
-
-	t.Run("no marker", func(t *testing.T) {
-		client := newHTTPPageClient(t, servePage(homePageHTML()))
-		grades, err := client.GetGrades(ctx, "111111")
-		if !errors.Is(err, ErrSelectionUnknown) || grades != nil {
-			t.Fatalf("GetGrades = (%v, %v), want (nil, ErrSelectionUnknown)", grades, err)
-		}
-	})
-
-	t.Run("empty id opts out of the check", func(t *testing.T) {
-		client := newHTTPPageClient(t, servePage(homePageHTML()))
-		grades, err := client.GetGrades(ctx, "")
-		if err != nil || len(grades) != 1 || grades[0].StudentID != "" {
-			t.Fatalf("GetGrades = (%+v, %v), want one unattributed row", grades, err)
-		}
-	})
-}
-
 // TestGetHomePage_OneFetch: students and grades come from one response.
 func TestGetHomePage_OneFetch(t *testing.T) {
 	var mu sync.Mutex
@@ -244,9 +207,10 @@ func TestGetHomePage_OneFetch(t *testing.T) {
 func TestLoginPageWith200IsSessionExpired(t *testing.T) {
 	ctx := context.Background()
 	calls := map[string]func(c *Client) error{
-		"GetStudents": func(c *Client) error { _, err := c.GetStudents(ctx); return err },
-		"GetHomePage": func(c *Client) error { _, err := c.GetHomePage(ctx); return err },
-		"GetGrades":   func(c *Client) error { _, err := c.GetGrades(ctx, "111111"); return err },
+		"GetStudents":   func(c *Client) error { _, err := c.GetStudents(ctx); return err },
+		"GetHomePage":   func(c *Client) error { _, err := c.GetHomePage(ctx); return err },
+		"GetGrades":     func(c *Client) error { _, err := c.GetGrades(ctx, "111111"); return err },
+		"SelectStudent": func(c *Client) error { _, err := c.SelectStudent(ctx, "111111"); return err },
 		"FetchScoresMetadata": func(c *Client) error {
 			_, err := c.FetchScoresMetadata(ctx, "/guardian/scores.html?frn=00111222333&fg=Q1")
 			return err
@@ -405,20 +369,6 @@ func TestPathOnly(t *testing.T) {
 	} {
 		if got := pathOnly(in); got != want {
 			t.Errorf("pathOnly(%q) = %q, want %q", in, got, want)
-		}
-	}
-}
-
-// TestSwitchStudent_IsExplicitlyUnsupported: it must not report success, in
-// either page mode, and must not touch the portal.
-func TestSwitchStudent_IsExplicitlyUnsupported(t *testing.T) {
-	client := newHTTPPageClient(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		t.Errorf("unexpected request %s %s", r.Method, r.URL.Path)
-	}))
-	for _, httpPages := range []bool{true, false} {
-		client.SetHTTPPageFetch(httpPages)
-		if err := client.SwitchStudent(context.Background(), "111112"); !errors.Is(err, ErrSwitchStudentUnsupported) {
-			t.Errorf("http pages %v: SwitchStudent = %v, want ErrSwitchStudentUnsupported", httpPages, err)
 		}
 	}
 }

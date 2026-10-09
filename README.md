@@ -105,15 +105,14 @@ func main() {
 }
 ```
 
-**One student per session.** The portal shows one student at a time, and
-this library can only read the one the session already has selected:
-`SwitchStudent` is not implemented and returns
-`ErrSwitchStudentUnsupported` (see
-[docs/SWITCH_STUDENT_CAPTURE.md](docs/SWITCH_STUDENT_CAPTURE.md)).
-`Student.Selected` is set only from the page's explicit marker, and
-`GetGrades(ctx, id)` fails with `ErrStudentNotSelected` /
-`ErrSelectionUnknown` rather than return another student's grades under
-the id you asked for.
+**One student at a time.** The portal shows one student per session and
+every read returns that student's data. `SelectStudent(ctx, id)` submits
+the portal's own switcher form, re-reads the home page and confirms the
+marker moved (`ErrSwitchNotConfirmed` if not); `GetGrades(ctx, id)` uses it.
+`Student.Selected` is set only from the page's explicit marker -- with no
+marker the library returns `ErrSelectionUnknown` rather than guess. Do not
+read different students concurrently on one session. See
+[docs/SWITCH_STUDENT.md](docs/SWITCH_STUDENT.md).
 
 A complete runnable version lives in
 [`cmd/test-auth/main.go`](cmd/test-auth/main.go) — a good first

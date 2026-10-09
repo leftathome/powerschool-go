@@ -31,7 +31,7 @@ func (c *Client) GetAssignments(ctx context.Context, studentID string, grade *Gr
 	}
 
 	courseID := grade.CourseID
-	c.logger.Info("Fetching assignments for student ID: %s, course ID: %s", studentID, courseID)
+	c.logger.Info("Fetching assignments for one course")
 
 	if err := c.ensureAuthenticated(ctx); err != nil {
 		return nil, err
@@ -239,7 +239,7 @@ func (c *Client) GetAssignmentCategories(ctx context.Context, studentID string, 
 	if grade == nil {
 		return nil, fmt.Errorf("grade is required")
 	}
-	c.logger.Info("Fetching assignment categories for course ID: %s", grade.CourseID)
+	c.logger.Info("Fetching assignment categories for one course")
 
 	assignments, err := c.GetAssignments(ctx, studentID, grade)
 	if err != nil {

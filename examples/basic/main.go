@@ -63,14 +63,8 @@ func main() {
 			fmt.Printf("School: %s\n", student.SchoolName)
 		}
 
-		// The portal shows one student at a time and the library cannot
-		// switch; only the student the session has selected is readable.
-		if !student.Selected {
-			fmt.Println("\n(not the selected student; grades not readable in this session)")
-			continue
-		}
-
-		// Get grades
+		// Get grades. The portal shows one student at a time; GetGrades
+		// switches the session to this student first and confirms it.
 		fmt.Println("\nGrades:")
 		grades, err := client.GetGrades(ctx, student.ID)
 		if err != nil {

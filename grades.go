@@ -14,52 +14,44 @@ import (
 // GetGrades returns the grades table of the student the session has
 // selected.
 //
-// The portal's home page shows one student at a time and this library
-// cannot switch students (see SwitchStudent). studentID is therefore a
-// check, not a selector:
+// The portal's home page shows one student at a time:
 //
 //   - studentID == "": return the selected student's grades, whoever that is.
-//   - studentID != "": the page must explicitly mark that student as
-//     selected. If it marks another student the call fails with
-//     ErrStudentNotSelected; if it marks nobody, with ErrSelectionUnknown.
+//   - studentID != "": make that student the selected one first if it is
+//     not (SelectStudent), then return the grades from the page that
+//     confirmed the selection. The errors are SelectStudent's:
+//     ErrSelectionUnknown, ErrNotFound, ErrSwitchNotConfirmed.
 //
 // Each Grade carries the selected student's id, as parsed from the same
-// page, in Grade.StudentID. GetHomePage returns the students and the grades
-// from one fetch.
+// page, in Grade.StudentID; a row attributed to anyone but studentID fails
+// the call with ErrStudentNotSelected. Because a switch changes the
+// session's selection, calls for different students must not run
+// concurrently on one session.
 func (c *Client) GetGrades(ctx context.Context, studentID string) ([]*Grade, error) {
 	c.logger.Info("Fetching grades")
 
-	// Ensure we're authenticated
-	if err := c.ensureAuthenticated(ctx); err != nil {
-		return nil, err
+	var page *HomePage
+	var err error
+	if studentID == "" {
+		page, err = c.GetHomePage(ctx)
+	} else {
+		page, err = c.SelectStudent(ctx, studentID)
 	}
-
-	html, err := c.getPageHTML(ctx, "/guardian/home.html")
 	if err != nil {
 		return nil, err
 	}
 
-	doc, err := goquery.NewDocumentFromReader(strings.NewReader(html))
-	if err != nil {
-		return nil, WrapParseError(err, "grades")
-	}
-	selected := selectedStudentID(doc)
+	// The grades and the answer to "whose are they" come from one page.
 	if studentID != "" {
-		switch {
-		case selected == "":
-			return nil, ErrSelectionUnknown
-		case selected != studentID:
-			return nil, ErrStudentNotSelected
+		for _, g := range page.Grades {
+			if g.StudentID != studentID {
+				return nil, ErrStudentNotSelected
+			}
 		}
 	}
 
-	grades := parseGradesFromDoc(doc)
-	for _, g := range grades {
-		g.StudentID = selected
-	}
-
-	c.logger.Info("Found %d grade(s)", len(grades))
-	return grades, nil
+	c.logger.Info("Found %d grade(s)", len(page.Grades))
+	return page.Grades, nil
 }
 
 // GetGPA returns GPA information for a student

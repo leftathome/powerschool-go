@@ -21,8 +21,8 @@ const maxPageBytes = 8 << 20
 // Use it together with WithHTTPClient when the caller needs every byte of
 // post-login traffic to pass through one transport -- for example a
 // transport that refuses non-read-only methods. In this mode no browser is
-// started outside Authenticate: the calls that can only work through a
-// browser (SwitchStudent, GetProgressReports) return an error instead.
+// started outside Authenticate: the call that can only work through a
+// browser (GetProgressReports) returns an error instead.
 //
 // The default (browser) mode is unchanged. Pages whose content is rendered
 // client-side will parse as empty in HTTP mode; the home-page grades table
@@ -107,9 +107,14 @@ func isLoginRedirect(resp *http.Response) bool {
 		return true
 	}
 	if resp.Request != nil && resp.Request.URL != nil {
-		return strings.HasPrefix(resp.Request.URL.Path, "/public/")
+		return isPublicPath(resp.Request.URL.Path)
 	}
 	return false
+}
+
+// isPublicPath reports whether path is under the portal's signed-out area.
+func isPublicPath(path string) bool {
+	return strings.HasPrefix(path, "/public/")
 }
 
 // loginPageSelector matches the sign-in form's own fields: the form the
