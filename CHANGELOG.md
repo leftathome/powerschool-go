@@ -5,6 +5,53 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+Proposed as 0.2.0: several changes below alter behaviour callers could have
+relied on. Nothing here has been run against a live instance; see
+[docs/SWITCH_STUDENT_CAPTURE.md](docs/SWITCH_STUDENT_CAPTURE.md) for what a
+live session still has to confirm.
+
+### Fixed
+
+- **One student's details could be attached to another student.**
+  `GetStudents` copied the page-level details (student number, grade level,
+  school) onto `students[0]` whenever the page carried no
+  `#students-list li.selected` marker. Those details describe whichever
+  student the session has selected, so on markup without the marker a
+  second child's data was reported under the first child's id. The library
+  no longer guesses: only an explicit marker selects a student, and without
+  one nobody is enriched.
+- `SwitchStudent` reported success without switching anything. It now
+  returns `ErrSwitchStudentUnsupported` and makes no request.
+- `GetGrades(ctx, studentID)` ignored `studentID` and returned the selected
+  student's grades under any id. A non-empty `studentID` is now checked
+  against the page's explicit marker (`ErrStudentNotSelected`,
+  `ErrSelectionUnknown`); pass `""` for "whoever is selected".
+- A dead session answered with HTTP 200 and the sign-in form (no redirect)
+  was parsed as a page with no students. Page reads and the assignment
+  lookup now report it as a session-expired `*Error`.
+- Errors no longer carry response bodies, query strings or student ids.
+  The assignment lookup embedded 200 bytes of the response in its error;
+  `http.Client` errors carried the full URL with `frn` and `schoolid`.
+  Unexpected statuses are reported as `*HTTPStatusError` (operation, status,
+  body length).
+
+### Added
+
+- `WithHTTPPageFetch` / `SetHTTPPageFetch` / `UsesHTTPPageFetch`: route
+  post-login page reads through the client's `http.Client` as plain GETs
+  instead of a headless browser, so a caller's transport sees every request.
+- `GetHomePage`: students and grades from a single fetch of the home page.
+- `Student.Selected`, `Grade.StudentID` (the selected student's id as parsed
+  from the grade's own page), `HomePage.SelectedStudent`.
+- `AssignmentLookupPath`, the one path the library POSTs to after login.
+
+### Changed
+
+- `GetStudents` lists each student once even when the switcher is rendered
+  more than once on the page.
+
 ## [0.1.2] - 2026-10-09
 
 ### Fixed

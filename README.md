@@ -74,35 +74,46 @@ func main() {
         log.Fatal(err)
     }
 
-    students, err := client.GetStudents(ctx)
+    // One fetch: the account's students and the grades of the student
+    // the session has selected.
+    page, err := client.GetHomePage(ctx)
     if err != nil {
         log.Fatal(err)
     }
+    for _, s := range page.Students {
+        fmt.Printf("%s (selected: %v)\n", s.Name, s.Selected)
+    }
 
-    for _, s := range students {
-        fmt.Printf("%s (grade %d)\n", s.Name, s.GradeLevel)
+    s := page.SelectedStudent()
+    if s == nil {
+        log.Fatal("the page does not mark which student is selected")
+    }
+    for _, g := range page.Grades {
+        fmt.Printf("  %-25s %s\n", g.CourseName, g.CurrentGrade)
 
-        grades, err := client.GetGrades(ctx, s.ID)
+        // GetAssignments takes the *Grade (not a raw courseID)
+        // because the scores-page URL and the API-facing student
+        // DCID are both captured during grade parsing and cached
+        // on the Grade for reuse.
+        assignments, err := client.GetAssignments(ctx, s.ID, g)
         if err != nil {
-            log.Fatal(err)
+            log.Printf("    assignments unavailable: %v", err)
+            continue
         }
-        for _, g := range grades {
-            fmt.Printf("  %-25s %s\n", g.CourseName, g.CurrentGrade)
-
-            // GetAssignments takes the *Grade (not a raw courseID)
-            // because the scores-page URL and the API-facing student
-            // DCID are both captured during grade parsing and cached
-            // on the Grade for reuse.
-            assignments, err := client.GetAssignments(ctx, s.ID, g)
-            if err != nil {
-                log.Printf("    assignments unavailable: %v", err)
-                continue
-            }
-            fmt.Printf("    %d assignment(s)\n", len(assignments))
-        }
+        fmt.Printf("    %d assignment(s)\n", len(assignments))
     }
 }
 ```
+
+**One student per session.** The portal shows one student at a time, and
+this library can only read the one the session already has selected:
+`SwitchStudent` is not implemented and returns
+`ErrSwitchStudentUnsupported` (see
+[docs/SWITCH_STUDENT_CAPTURE.md](docs/SWITCH_STUDENT_CAPTURE.md)).
+`Student.Selected` is set only from the page's explicit marker, and
+`GetGrades(ctx, id)` fails with `ErrStudentNotSelected` /
+`ErrSelectionUnknown` rather than return another student's grades under
+the id you asked for.
 
 A complete runnable version lives in
 [`cmd/test-auth/main.go`](cmd/test-auth/main.go) — a good first

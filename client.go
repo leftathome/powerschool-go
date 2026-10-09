@@ -235,7 +235,8 @@ func (c *Client) doRequestWithHeaders(ctx context.Context, method, path string, 
 	// Perform request
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return nil, WrapNetworkError(err)
+		// http.Client reports the full request URL, query included.
+		return nil, WrapNetworkError(redactURLError(err))
 	}
 
 	// Check for session expiration

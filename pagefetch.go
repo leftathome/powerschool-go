@@ -2,10 +2,13 @@ package powerschool
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
+
+	"github.com/PuerkitoBio/goquery"
 )
 
 // maxPageBytes caps how much of a page body getPageHTMLOverHTTP reads.
@@ -58,7 +61,7 @@ func (c *Client) getPageHTMLOverHTTP(ctx context.Context, path string) (string, 
 		path = "/" + path
 	}
 
-	c.logger.Debug("Fetching page over HTTP: %s", c.baseURL+path)
+	c.logger.Debug("Fetching page over HTTP: %s", pathOnly(path))
 
 	resp, err := c.doRequest(ctx, http.MethodGet, path)
 	if err != nil {
@@ -68,18 +71,30 @@ func (c *Client) getPageHTMLOverHTTP(ctx context.Context, path string) (string, 
 
 	if isLoginRedirect(resp) {
 		c.session = nil
-		return "", ErrSessionExpired
-	}
-	if resp.StatusCode != http.StatusOK {
-		return "", WrapNetworkError(fmt.Errorf("GET %s: unexpected status %d", path, resp.StatusCode))
+		return "", errLoginPage("requested page")
 	}
 
 	body, err := io.ReadAll(io.LimitReader(resp.Body, maxPageBytes))
 	if err != nil {
 		return "", WrapNetworkError(err)
 	}
+	if resp.StatusCode != http.StatusOK {
+		return "", WrapNetworkError(&HTTPStatusError{
+			Op:         "GET " + pathOnly(path),
+			StatusCode: resp.StatusCode,
+			BodyLen:    len(body),
+		})
+	}
 
 	html := string(body)
+	// A dead session is not always a redirect: the portal can answer the
+	// original URL with 200 and the login form. Parsing that as a page
+	// would read as "no students" / "no grades".
+	if isLoginPage(html) {
+		c.session = nil
+		return "", errLoginPage("requested page")
+	}
+
 	c.logger.DebugHTML("page content", html)
 	return html, nil
 }
@@ -95,4 +110,56 @@ func isLoginRedirect(resp *http.Response) bool {
 		return strings.HasPrefix(resp.Request.URL.Path, "/public/")
 	}
 	return false
+}
+
+// loginPageSelector matches the sign-in form's own fields: the form the
+// browser login drives (internal/browser) and its password input.
+const loginPageSelector = `form#LoginForm, input#fieldPassword, input[type="password"][name="pw"]`
+
+// loginPageTitle is the heading of the reference instance's sign-in page.
+const loginPageTitle = "Parent, Guardian, and Student Login"
+
+// isLoginPage reports whether html is the portal's sign-in page rather
+// than a signed-in page. It looks for the sign-in form's fields (or the
+// sign-in heading) and requires that the page has no student switcher,
+// which every signed-in guardian page carries and the sign-in page never
+// does.
+func isLoginPage(html string) bool {
+	if strings.Contains(html, "switchStudent(") {
+		return false
+	}
+	if strings.Contains(html, loginPageTitle) {
+		return true
+	}
+	// Cheap pre-check before parsing a large page.
+	lower := strings.ToLower(html)
+	if !strings.Contains(lower, "loginform") && !strings.Contains(lower, "password") {
+		return false
+	}
+	doc, err := goquery.NewDocumentFromReader(strings.NewReader(html))
+	if err != nil {
+		return false
+	}
+	return doc.Find(loginPageSelector).Length() > 0
+}
+
+// pathOnly strips the query and fragment from a URL or server-relative
+// path. Queries on this portal carry enrolment and school identifiers
+// (frn, schoolid) and must not reach an error string or a log line.
+func pathOnly(rawURL string) string {
+	if i := strings.IndexAny(rawURL, "?#"); i >= 0 {
+		return rawURL[:i]
+	}
+	return rawURL
+}
+
+// redactURLError rewrites a *url.Error (what http.Client.Do returns) so its
+// URL carries no query string, keeping the wrapped cause intact for
+// errors.Is / errors.As.
+func redactURLError(err error) error {
+	var ue *url.Error
+	if errors.As(err, &ue) {
+		return &url.Error{Op: ue.Op, URL: pathOnly(ue.URL), Err: ue.Err}
+	}
+	return err
 }
