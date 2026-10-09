@@ -1,0 +1,81 @@
+<!doctype html>
+<!-- SYNTHETIC fixture for /guardian/termgrades.html. The structure follows a
+     PII-free structural capture of the page; every school, course, credit,
+     date and grade in it is invented. Note the heading names no student. -->
+<html><body>
+<ul id="students-list"><li class="selected"><a href="javascript:switchStudent(111111);">Ana</a></li><li ><a href="javascript:switchStudent(111112);">Ben</a></li></ul>
+<form id="switch_student_form" action="home.html" method="post"><input type="hidden" name="selected_student_id"/></form>
+<div id="content-main" role="main">
+ <div class="container">
+  <h1>Grade History and GPA Report</h1>
+  <h2>THIS IS NOT AN OFFICIAL TRANSCRIPT</h2>
+  <div class="official-msg">Historical grades are stored at the end of each term. <b>Please contact the school office if anything looks wrong.</b></div>
+  <div class="gpa-msg">(<b>*</b>) indicates 'Not Included in GPA calculation'</div>
+  <div class="row">
+   <div class="col-12">
+    <table class="cell-border" id="grades-tbl">
+     <caption class="offscreen">Historical Grades and GPA Report</caption>
+     <thead>
+      <tr>
+       <th class="dt-center" scope="col">Date Compl</th>
+       <th class="dt-center" scope="col">Grade Level</th>
+       <th class="dt-center" scope="col">School</th>
+       <th class="dt-center" scope="col">Course #</th>
+       <th class="dt-center" scope="col">Course</th>
+       <th class="dt-center" scope="col">Credit Earned</th>
+       <th class="dt-center" scope="col">Credit Attempted</th>
+       <th class="dt-center" scope="col">Grade</th>
+      </tr>
+     </thead>
+     <tbody>
+      <tr>
+       <td class="dt-center" data-sort="202601">01/2026</td>
+       <td class="dt-center">7</td>
+       <td>Example MS</td>
+       <td class="dt-center">SCI7001</td>
+       <td>EXAMPLE SCIENCE 7A</td>
+       <td class="dt-center">0.500</td>
+       <td class="dt-center">0.500</td>
+       <td class="dt-center">A-<b></b></td>
+      </tr>
+      <tr>
+       <td class="dt-center" data-sort="202601">01/2026</td>
+       <td class="dt-center">7</td>
+       <td>Example MS</td>
+       <td class="dt-center">MTH7002</td>
+       <td>EXAMPLE MATH 7A</td>
+       <td class="dt-center">0.500</td>
+       <td class="dt-center">0.500</td>
+       <td class="dt-center">B+<b></b></td>
+      </tr>
+      <tr>
+       <td class="dt-center" data-sort="202601">01/2026</td>
+       <td class="dt-center">7</td>
+       <td>Example MS</td>
+       <td class="dt-center">ADV7000</td>
+       <td>ADVISORY</td>
+       <td class="dt-center">0.000</td>
+       <td class="dt-center">0.250</td>
+       <td class="dt-center">P <b>*</b></td>
+      </tr>
+      <tr>
+       <td class="dt-center" data-sort="202506">06/2025</td>
+       <td class="dt-center">6</td>
+       <td>Example ES</td>
+       <td class="dt-center">SCI6001</td>
+       <td>EXAMPLE SCIENCE 6</td>
+       <td class="dt-center">1.000</td>
+       <td class="dt-center">1.000</td>
+       <td class="dt-center">A<b></b></td>
+      </tr>
+     </tbody>
+     <tfoot>
+      <tr><td colspan="8">(<b>*</b>) indicates 'Not Included in GPA calculation'</td></tr>
+     </tfoot>
+    </table>
+   </div>
+  </div>
+  <input id="activeNav" type="hidden" value="">
+ </div>
+</div>
+</body></html>

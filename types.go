@@ -151,6 +151,10 @@ type HistoricalGrade struct {
 	CreditAttempted  float64
 	LetterGrade      string
 	IncludedInGPA    bool   // false if marked with asterisk
+	// DateCompletedText is the completion date as the page prints it
+	// (month/year, e.g. "01/2026"). DateCompleted is the first day of
+	// that month.
+	DateCompletedText string
 }
 
 // Attendance represents an attendance record

@@ -22,6 +22,12 @@ type HomePage struct {
 	// Grades is the grades table. It belongs to SelectedStudent(); when
 	// that is nil the page did not say whose grades these are.
 	Grades []*Grade
+	// Student is the same evidence in the form the other guardian pages
+	// report it (PageStudent): the selected switcher id and the name the
+	// page heading ends with. A caller can compare HeadingName with the
+	// HeadingName of an attendance or teacher-comments page read in the
+	// same pass.
+	Student PageStudent
 }
 
 // SelectedStudent returns the student the page explicitly marked as
@@ -69,7 +75,7 @@ func parseHomePage(html string) (*HomePage, error) {
 	if err != nil {
 		return nil, WrapParseError(err, "students list")
 	}
-	page := &HomePage{Students: students, Grades: parseGradesFromDoc(doc)}
+	page := &HomePage{Students: students, Grades: parseGradesFromDoc(doc), Student: pageStudent(doc)}
 	if sel := page.SelectedStudent(); sel != nil {
 		for _, g := range page.Grades {
 			g.StudentID = sel.ID

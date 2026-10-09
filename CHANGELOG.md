@@ -7,6 +7,67 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-09
+
+The three parsers below were run against a live two-student parent account
+on 2026-10-09, before and after the hardening pass: every page identified
+the right student; attendance returned 16 and 7 course rows with every date
+parsed, none on a weekend, across a school year spanning New Year, and every
+code present in the page's 18-entry legend; grade history returned rows for
+both students; the teacher-comments term was confirmed for the default term
+and for an explicitly requested one. One path has no live counterpart yet: a
+non-empty teacher comment (none was posted in any term), so comment text
+handling is fixture-tested only. Also unverified live: multi-year grade
+history and single-student accounts. See
+[docs/PAGES_STRUCTURE.md](docs/PAGES_STRUCTURE.md).
+
+### Added
+
+- `GetAttendance` / `ParseAttendancePage`: `/guardian/attendance.html`, the
+  per-course grid of one cell per school day, with real dates (the page
+  prints no year; it is taken from each row's enrolment dates, else from a
+  reference date), the attendance code in each cell, and the legend parsed
+  from the page as `AttendanceCode{Code, Category, Description}`. The page
+  has no totals; `AttendanceCourse.Count` counts by legend category.
+- `GetGradeHistoryPage` / `ParseGradeHistoryPage`: `/guardian/termgrades.html`,
+  which is the stored-grade history (`table#grades-tbl`), not a per-quarter
+  view.
+- `GetTeacherComments` / `ParseTeacherCommentsPage`:
+  `/guardian/teachercomments.html`, with the reporting terms the page offers
+  and a fetch by term (`?fg=<term>`, GET). The page must mark the requested
+  term as selected, else `ErrTermMismatch`.
+- `PageStudent`, returned by all three and by `HomePage.Student`: the id the
+  page's own student switcher marks as selected. The three parsers fail
+  with `ErrSelectionUnknown` when a page marks nobody or more than one.
+- `ErrNotImplemented`, `ErrTermMismatch`,
+  `HistoricalGrade.DateCompletedText`.
+
+### Hardened after review
+
+- Attendance dates are tied to the grid's weekday columns. A week header
+  that starts mid-week ("9/3-9/5") maps onto the matching columns instead
+  of shifting the week; the year is the one that puts the header on school
+  days and inside the row's enrolment, so a summer-school row and a page
+  read with a July reference date no longer land a year off; every returned
+  date is checked against its column's weekday. A header that cannot be
+  placed, a header column that is not a week range, and course rows with no
+  week columns are parse errors, never wrong or missing dates.
+- The attendance legend is split on the page's separator elements, so a
+  description containing "|" is kept whole.
+- Teacher comments: `<br>` inside the comment becomes a line break and
+  `<script>` / `<style>` content is dropped.
+- Grade history: the not-in-GPA `*` is recognised before the letter as well
+  as after it.
+
+### Changed
+
+- `GetGradeHistory` parses the real table instead of guessing at "any table
+  with eight columns". With a student id it now selects that student first
+  and requires the history page's own switcher to mark that student.
+- `GetProgressReports` and `DownloadProgressReport` return
+  `ErrNotImplemented` and contact nothing. The former fetched a placeholder
+  host and returned an empty list.
+
 ## [0.2.0] - 2026-10-09
 
 Several changes below alter behaviour callers could have relied on -- in

@@ -10,35 +10,16 @@ import (
 	"github.com/leftathome/powerschool-go/internal/browser"
 )
 
-// GetProgressReports retrieves the list of progress reports and report cards for a student
-// These are PDFs organized by academic year
-// URL pattern: https://psplugin.example.org/ProgressReports/Reports/Index?studentidentifier=[STUDENT_ID]
+// GetProgressReports is NOT IMPLEMENTED and always returns
+// ErrNotImplemented without contacting anything.
+//
+// Progress reports and report cards are served by a district plugin on a
+// separate host whose address and page structure have never been captured.
+// The earlier version of this method fetched a placeholder host and
+// returned whatever PDF links it found, which for a real account is an
+// empty list indistinguishable from "no reports".
 func (c *Client) GetProgressReports(ctx context.Context, studentID string) ([]*ProgressReport, error) {
-	c.logger.Info("Fetching progress reports")
-
-	// Ensure we're authenticated
-	if err := c.ensureAuthenticated(ctx); err != nil {
-		return nil, err
-	}
-
-	// Note: This is a different domain (psplugin.example.org) but should use same session
-	url := fmt.Sprintf("https://psplugin.example.org/ProgressReports/Reports/Index?studentidentifier=%s", studentID)
-
-	// Get the page HTML
-	html, err := c.getPageHTMLFromURL(ctx, url)
-	if err != nil {
-		return nil, err
-	}
-
-	c.logger.Debug("Parsing progress reports from HTML")
-
-	reports, err := parseProgressReports(html, studentID)
-	if err != nil {
-		return nil, WrapParseError(err, "progress reports")
-	}
-
-	c.logger.Info("Found %d progress report(s)", len(reports))
-	return reports, nil
+	return nil, ErrNotImplemented
 }
 
 // getPageHTMLFromURL retrieves HTML from a full URL (not just path)
@@ -117,13 +98,8 @@ func parseProgressReports(html string, studentID string) ([]*ProgressReport, err
 	return reports, nil
 }
 
-// DownloadProgressReport downloads a progress report PDF
-// Returns the PDF content as bytes
+// DownloadProgressReport is NOT IMPLEMENTED and always returns
+// ErrNotImplemented. See GetProgressReports.
 func (c *Client) DownloadProgressReport(ctx context.Context, report *ProgressReport) ([]byte, error) {
-	c.logger.Info("Downloading a progress report")
-
-	// TODO: Implement PDF download using session cookies
-	// This would use HTTP client with cookies to download the PDF
-
-	return nil, fmt.Errorf("DownloadProgressReport not yet implemented")
+	return nil, ErrNotImplemented
 }
