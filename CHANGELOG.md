@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] - 2026-10-09
+
+### Fixed
+
+- **Login could not start Chrome as root.** `Authenticate` did not pass
+  `--no-sandbox` when running as root (WSL, containers), so Chrome refused
+  to start and login failed before reaching the site. The page-fetch path
+  already handled this; login now uses the same check.
+- **A base URL without a scheme produced an invalid login URL.**
+  `NewClient("ps.example.org")` kept the bare host, and the browser rejected
+  `ps.example.org/public/` as an invalid URL. A value with no scheme is now
+  treated as an `https` host; surrounding whitespace is trimmed; a value with
+  no host is rejected.
+
+Both found on the first live login attempt after 0.1.1; login, students,
+grades and assignments were then verified end-to-end against a live parent
+account.
+
 ## [0.1.1] - 2026-10-09
 
 ### Fixed
