@@ -57,7 +57,10 @@ func Authenticate(ctx context.Context, opts *AuthenticateOptions) (*AuthResult, 
 	allocOpts := []chromedp.ExecAllocatorOption{
 		chromedp.Flag("headless", opts.Headless),
 		chromedp.Flag("disable-gpu", opts.DisableGPU),
-		chromedp.Flag("no-sandbox", opts.NoSandbox),
+		// Chrome refuses to start as root without --no-sandbox (WSL and
+		// containers); GetPageContentWithWait already handles this, and
+		// login must too or it fails before reaching the site.
+		chromedp.Flag("no-sandbox", opts.NoSandbox || needsNoSandbox()),
 		chromedp.WindowSize(opts.WindowSize[0], opts.WindowSize[1]),
 		chromedp.UserAgent(opts.UserAgent),
 		// Disable Chrome profile/sync prompts

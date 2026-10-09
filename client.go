@@ -27,14 +27,24 @@ func NewClient(baseURL string, opts ...Option) (*Client, error) {
 		return nil, ErrInvalidBaseURL
 	}
 
-	// Validate and normalize base URL
+	// Validate and normalize base URL. Operators routinely store just the
+	// host ("ps.example.org"); url.Parse accepts that as a scheme-less
+	// relative path, which then produced login URLs the browser rejected
+	// as invalid. Treat a value with no scheme as an https host.
+	baseURL = strings.TrimSpace(baseURL)
+	if !strings.Contains(baseURL, "://") {
+		baseURL = "https://" + baseURL
+	}
 	parsedURL, err := url.Parse(baseURL)
 	if err != nil {
 		return nil, NewError(CodeUnknown, "invalid base URL", err)
 	}
+	if parsedURL.Host == "" {
+		return nil, ErrInvalidBaseURL
+	}
 
 	// Ensure HTTPS for security
-	if parsedURL.Scheme == "http" {
+	if parsedURL.Scheme != "https" {
 		parsedURL.Scheme = "https"
 	}
 
