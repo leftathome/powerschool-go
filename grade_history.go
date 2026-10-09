@@ -10,33 +10,62 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
-// GetGradeHistory retrieves the grade history (transcript) for a student
-// This shows all completed courses with final grades
-// URL: https://ps.example.org/guardian/termgrades.html
-func (c *Client) GetGradeHistory(ctx context.Context, studentID string) ([]*HistoricalGrade, error) {
-	c.logger.Info("Fetching grade history")
+// GradeHistoryPath is the grade history page. Its file name says "term
+// grades"; what it holds is the transcript-style list of stored grades.
+const GradeHistoryPath = "/guardian/termgrades.html"
 
-	// Ensure we're authenticated
+// GradeHistoryPage is /guardian/termgrades.html: the stored (final) grade
+// of each course the student has completed, with its credit, one row per
+// course and completion date. It is not a per-quarter view of the current
+// year -- those grades are the Q1..S2 columns of the home page (GetGrades).
+type GradeHistoryPage struct {
+	// Student is the page's own evidence of whose history this is: the
+	// switcher's selected id. (This page's heading names nobody.)
+	Student PageStudent
+	// Grades are the table's rows, in page order.
+	Grades []*HistoricalGrade
+}
+
+// GetGradeHistoryPage fetches and parses /guardian/termgrades.html for the
+// student the session has selected. Check GradeHistoryPage.Student (and
+// read its caveat) before attributing the result.
+func (c *Client) GetGradeHistoryPage(ctx context.Context) (*GradeHistoryPage, error) {
+	c.logger.Info("Fetching grade history")
 	if err := c.ensureAuthenticated(ctx); err != nil {
 		return nil, err
 	}
-
-	// Get the grade history page
-	// Note: May need to pass studentID as parameter or switch student first
-	html, err := c.getPageHTML(ctx, "/guardian/termgrades.html")
+	html, err := c.getPageHTML(ctx, GradeHistoryPath)
 	if err != nil {
 		return nil, err
 	}
-
-	c.logger.Debug("Parsing grade history from HTML")
-
-	grades, err := parseGradeHistory(html)
+	page, err := ParseGradeHistoryPage(html)
 	if err != nil {
-		return nil, WrapParseError(err, "grade history")
+		return nil, err
 	}
+	c.logger.Info("Found %d historical grade(s)", len(page.Grades))
+	return page, nil
+}
 
-	c.logger.Info("Found %d historical grade(s)", len(grades))
-	return grades, nil
+// GetGradeHistory returns the grade history of a student.
+//
+// studentID == "" reads whoever the session has selected. Otherwise the
+// student is selected first (SelectStudent, which may post the portal's
+// switcher form), and the history page's own switcher must mark that
+// student; if it marks another the call fails with ErrStudentNotSelected.
+func (c *Client) GetGradeHistory(ctx context.Context, studentID string) ([]*HistoricalGrade, error) {
+	if studentID != "" {
+		if _, err := c.SelectStudent(ctx, studentID); err != nil {
+			return nil, err
+		}
+	}
+	page, err := c.GetGradeHistoryPage(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if studentID != "" && page.Student.SelectedID != studentID {
+		return nil, ErrStudentNotSelected
+	}
+	return page.Grades, nil
 }
 
 // CalculateGPAFromHistory calculates GPA from historical grades
@@ -83,89 +112,99 @@ func (c *Client) CalculateGPAFromHistory(ctx context.Context, studentID string) 
 	return gpa, nil
 }
 
-// parseGradeHistory parses historical grades from the termgrades page
-func parseGradeHistory(html string) ([]*HistoricalGrade, error) {
+// ParseGradeHistoryPage parses the HTML of /guardian/termgrades.html:
+// table#grades-tbl with the columns "Date Compl" (MM/YYYY), "Grade Level",
+// "School", "Course #", "Course", "Credit Earned", "Credit Attempted" and
+// "Grade" (headers verified live). A grade followed by "*" is one the page
+// says is not included in the GPA. Fails with ErrSelectionUnknown when the
+// page does not mark exactly one student as selected.
+func ParseGradeHistoryPage(html string) (*GradeHistoryPage, error) {
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(html))
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse HTML: %w", err)
+		return nil, WrapParseError(err, "grade history page")
+	}
+	page := &GradeHistoryPage{Student: pageStudent(doc)}
+	if err := requireSelected(page.Student); err != nil {
+		return nil, err
 	}
 
-	var grades []*HistoricalGrade
+	table := doc.Find("table#grades-tbl")
+	if table.Length() == 0 {
+		return nil, WrapParseError(fmt.Errorf("no grade history table (table#grades-tbl)"), "grade history page")
+	}
 
-	// TODO: Find the actual table with historical grades
-	// Expected columns:
-	// - Date Completed
-	// - Grade Level
-	// - School
-	// - Course Number
-	// - Course Name
-	// - Credit Earned
-	// - Credit Attempted
-	// - Grade (with asterisk if not included in GPA)
-
-	// Placeholder implementation - will need actual HTML structure
-	doc.Find("table tr").Each(func(i int, s *goquery.Selection) {
-		// Skip header row
-		if s.Find("th").Length() > 0 {
-			return
-		}
-
-		cells := s.Find("td")
-		if cells.Length() < 8 {
-			return
-		}
-
-		grade := &HistoricalGrade{}
-
-		// Parse date completed
-		dateStr := strings.TrimSpace(cells.Eq(0).Text())
-		if date, err := parseDate(dateStr); err == nil {
-			grade.DateCompleted = date
-		}
-
-		// Parse grade level
-		gradeLevelStr := strings.TrimSpace(cells.Eq(1).Text())
-		if gradeLevel, err := strconv.Atoi(gradeLevelStr); err == nil {
-			grade.GradeLevel = gradeLevel
-		}
-
-		// School
-		grade.School = strings.TrimSpace(cells.Eq(2).Text())
-
-		// Course number
-		grade.CourseNumber = strings.TrimSpace(cells.Eq(3).Text())
-
-		// Course name
-		grade.CourseName = strings.TrimSpace(cells.Eq(4).Text())
-
-		// Credit earned
-		creditEarnedStr := strings.TrimSpace(cells.Eq(5).Text())
-		if credit, err := strconv.ParseFloat(creditEarnedStr, 64); err == nil {
-			grade.CreditEarned = credit
-		}
-
-		// Credit attempted
-		creditAttemptedStr := strings.TrimSpace(cells.Eq(6).Text())
-		if credit, err := strconv.ParseFloat(creditAttemptedStr, 64); err == nil {
-			grade.CreditAttempted = credit
-		}
-
-		// Letter grade (may have asterisk)
-		gradeText := strings.TrimSpace(cells.Eq(7).Text())
-		if strings.HasSuffix(gradeText, "*") {
-			grade.LetterGrade = strings.TrimSuffix(gradeText, "*")
-			grade.IncludedInGPA = false
-		} else {
-			grade.LetterGrade = gradeText
-			grade.IncludedInGPA = true
-		}
-
-		if grade.CourseName != "" {
-			grades = append(grades, grade)
+	// Locate the columns by header text rather than by position.
+	col := map[string]int{}
+	table.Find("thead th").Each(func(i int, th *goquery.Selection) {
+		switch h := strings.ToLower(cleanText(th.Text())); {
+		case strings.HasPrefix(h, "date"):
+			col["date"] = i
+		case strings.HasPrefix(h, "grade level"):
+			col["level"] = i
+		case h == "school":
+			col["school"] = i
+		case strings.HasPrefix(h, "course #"), strings.HasPrefix(h, "course number"):
+			col["number"] = i
+		case h == "course":
+			col["course"] = i
+		case strings.Contains(h, "earned"):
+			col["earned"] = i
+		case strings.Contains(h, "attempted"):
+			col["attempted"] = i
+		case h == "grade":
+			col["grade"] = i
 		}
 	})
+	for _, need := range []string{"date", "course", "grade"} {
+		if _, ok := col[need]; !ok {
+			return nil, WrapParseError(fmt.Errorf("grade history table has no %q column", need), "grade history page")
+		}
+	}
 
-	return grades, nil
+	table.Find("tbody tr").Each(func(i int, row *goquery.Selection) {
+		cells := row.Find("td")
+		text := func(name string) string {
+			idx, ok := col[name]
+			if !ok || idx >= cells.Length() {
+				return ""
+			}
+			return cleanText(cells.Eq(idx).Text())
+		}
+		grade := &HistoricalGrade{
+			School:        text("school"),
+			CourseNumber:  text("number"),
+			CourseName:    text("course"),
+			IncludedInGPA: true,
+		}
+		if grade.CourseName == "" {
+			return
+		}
+		grade.DateCompletedText = text("date")
+		if t, err := time.Parse("1/2006", grade.DateCompletedText); err == nil {
+			grade.DateCompleted = t
+		} else if t, err := parseDate(grade.DateCompletedText); err == nil {
+			grade.DateCompleted = t
+		}
+		if level, err := strconv.Atoi(text("level")); err == nil {
+			grade.GradeLevel = level
+		}
+		if credit, err := strconv.ParseFloat(text("earned"), 64); err == nil {
+			grade.CreditEarned = credit
+		}
+		if credit, err := strconv.ParseFloat(text("attempted"), 64); err == nil {
+			grade.CreditAttempted = credit
+		}
+		// "*" marks a grade the page says is not included in the GPA. It
+		// is printed after the letter; accept it before the letter too.
+		letter := strings.ReplaceAll(text("grade"), " ", "")
+		if strings.HasPrefix(letter, "*") || strings.HasSuffix(letter, "*") {
+			letter = strings.Trim(letter, "*")
+			grade.IncludedInGPA = false
+		}
+		grade.LetterGrade = letter
+		page.Grades = append(page.Grades, grade)
+	})
+	return page, nil
 }
 
 // letterGradeToGPA converts a letter grade to GPA points (4.0 scale)

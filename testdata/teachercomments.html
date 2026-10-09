@@ -1,0 +1,62 @@
+<!doctype html>
+<!-- SYNTHETIC fixture for /guardian/teachercomments.html. The structure
+     follows a PII-free structural capture of the page; every name, course
+     number and comment in it is invented. As on the live page, the option
+     values are URLs and the current term (here S1) is marked selected. -->
+<html><body>
+<ul id="students-list"><li class="selected"><a href="javascript:switchStudent(111111);">Ana</a></li><li ><a href="javascript:switchStudent(111112);">Ben</a></li></ul>
+<form id="switch_student_form" action="home.html" method="post"><input type="hidden" name="selected_student_id"/></form>
+<div id="content-main" role="main">
+ <h1>Teacher Comments: Rivera, Ana</h1>
+ <div class="box-round">
+  <h2>
+   <span class="screen_readers_only">Teacher comments listing.</span>
+   <label for="reportingTermHeadingSelect">Reporting Term</label>
+   <form class="noSubmitLoading" name="navigation">
+    <select id="reportingTermHeadingSelect" name="storecode">
+     <option value="teachercomments.html?fg=&showdropped="></option>
+     <option value="teachercomments.html?fg=Q1">Q1</option>
+     <option value="teachercomments.html?fg=Q2">Q2</option>
+     <option value="teachercomments.html?fg=Q3">Q3</option>
+     <option value="teachercomments.html?fg=Q4">Q4</option>
+     <option value="teachercomments.html?fg=S1" selected>S1</option>
+     <option value="teachercomments.html?fg=S2">S2</option>
+    </select>
+   </form>
+  </h2>
+  <div class="button-row">
+   <a class="button" href="teachercomments.html?fg=Q1&showdropped=true">Show dropped classes also</a>
+  </div>
+  <table class="grid linkDescList">
+   <tbody>
+    <tr><th>Exp.</th><th>Course #</th><th>Course</th><th>Teacher</th><th>Comment</th></tr>
+    <tr>
+     <td>HR(A)</td>
+     <td>ADV7000</td>
+     <td>ADVISORY</td>
+     <td><a class="button mini dialogM" href="teacherinfo.html?frn=0050000001&nolink=1" title="Details"><em class="ui-icon ui-icon-white ui-icon-contact"></em></a> <a href="mailto:teacher1@example.org">Email Okafor, Daniel R</a></td>
+     <td><pre></pre></td>
+    </tr>
+    <tr>
+     <td>1(A)</td>
+     <td>SCI7001</td>
+     <td>EXAMPLE SCIENCE 7A</td>
+     <td><a class="button mini dialogM" href="teacherinfo.html?frn=0050000002&nolink=1" title="Details"><em class="ui-icon ui-icon-white ui-icon-contact"></em></a> <a href="mailto:teacher2@example.org">Email Lindqvist, Marta</a></td>
+     <td><pre>Careful lab work this term.
+Please review the unit 2 vocabulary before the quiz.</pre></td>
+    </tr>
+    <tr>
+     <td>2(B)</td>
+     <td>MTH7002</td>
+     <td>EXAMPLE MATH 7B</td>
+     <td><a class="button mini dialogM" href="teacherinfo.html?frn=0050000003&nolink=1" title="Details"><em class="ui-icon ui-icon-white ui-icon-contact"></em></a> <a href="mailto:teacher3@example.org">Email Abara, Tomas J</a></td>
+     <td><pre>   </pre></td>
+    </tr>
+   </tbody>
+  </table>
+  <p class="feedback-note"><strong>*</strong> Additional teacher comments may be found on the score detail page of each class.</p>
+ </div>
+ <input id="activeNav" type="hidden" value="">
+ <div id="cust-content-footer"></div>
+</div>
+</body></html>

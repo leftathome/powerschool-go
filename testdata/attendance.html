@@ -1,0 +1,100 @@
+<!doctype html>
+<!-- SYNTHETIC fixture for /guardian/attendance.html. The structure follows a
+     PII-free structural capture of the page; every name, course, room, date
+     and code in it is invented. -->
+<html><body>
+<ul id="students-list"><li class="selected"><a href="javascript:switchStudent(111111);">Ana</a></li><li ><a href="javascript:switchStudent(111112);">Ben</a></li></ul>
+<form id="switch_student_form" action="home.html" method="post"><input type="hidden" name="selected_student_id"/></form>
+<div id="content-main" role="main">
+ <h1>Meeting Attendance History: Rivera, Ana</h1>
+ <div class="box-round">
+  <table class="grid">
+   <tbody>
+    <tr>
+     <th class="table-element-text-align-start" rowspan="2">Course</th>
+     <th rowspan="2">Expression</th>
+     <th class="center" colspan="5">9/1-&rlm;9/5</th>
+     <th class="center" colspan="5">12/29-&rlm;1/2</th>
+    </tr>
+    <tr>
+     <th title="Monday">M</th><th title="Tuesday">T</th><th title="Wednesday">W</th><th title="Thursday">H</th><th title="Friday">F</th>
+     <th title="Monday">M</th><th title="Tuesday">T</th><th title="Wednesday">W</th><th title="Thursday">H</th><th title="Friday">F</th>
+    </tr>
+    <tr>
+     <td class="table-element-text-align-start">ADVISORY<br>Okafor, Daniel R 7<br>E: 09/03/2025 L: 06/17/2026</td>
+     <td>HR(A)</td>
+     <td>-</td><td>-</td><td></td><td>A</td><td></td>
+     <td>-</td><td>-</td><td>-</td><td>-</td><td>.</td>
+    </tr>
+    <tr>
+     <td class="table-element-text-align-start">EXAMPLE SCIENCE 7A<br>Lindqvist, Marta 12<br>E: 09/03/2025 L: 06/17/2026</td>
+     <td>1(A)</td>
+     <td>-</td><td>-</td><td>L</td><td>A</td><td>ME</td>
+     <td>-</td><td>-</td><td>-</td><td>-</td><td></td>
+    </tr>
+    <tr>
+     <td class="table-element-text-align-start">EXAMPLE MATH 7B<br>Abara, Tomas J B4<br>E: 01/27/2026 L: 06/17/2026</td>
+     <td>2(B)</td>
+     <td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
+     <td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
+    </tr>
+    <tr>
+     <th class="table-element-text-align-start" rowspan="2">Course</th>
+     <th rowspan="2">Expression</th>
+     <th class="center" colspan="5">1/5-&rlm;1/9</th>
+     <th class="center" colspan="5">6/15-&rlm;6/19</th>
+    </tr>
+    <tr>
+     <th title="Monday">M</th><th title="Tuesday">T</th><th title="Wednesday">W</th><th title="Thursday">H</th><th title="Friday">F</th>
+     <th title="Monday">M</th><th title="Tuesday">T</th><th title="Wednesday">W</th><th title="Thursday">H</th><th title="Friday">F</th>
+    </tr>
+    <tr>
+     <td class="table-element-text-align-start">ADVISORY<br>Okafor, Daniel R 7<br>E: 09/03/2025 L: 06/17/2026</td>
+     <td>HR(A)</td>
+     <td></td><td>VU</td><td></td><td></td><td></td>
+     <td>.</td><td>.</td><td>.</td><td>-</td><td>-</td>
+    </tr>
+    <tr>
+     <td class="table-element-text-align-start">EXAMPLE SCIENCE 7A<br>Lindqvist, Marta 12<br>E: 09/03/2025 L: 06/17/2026</td>
+     <td>1(A)</td>
+     <td></td><td>VU</td><td></td><td>FT</td><td>LE</td>
+     <td>.</td><td>.</td><td>.</td><td>-</td><td>-</td>
+    </tr>
+    <tr>
+     <td class="table-element-text-align-start">EXAMPLE MATH 7B<br>Abara, Tomas J B4<br>E: 01/27/2026 L: 06/17/2026</td>
+     <td>2(B)</td>
+     <td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
+     <td>.</td><td>ZZ</td><td>.</td><td>-</td><td>-</td>
+    </tr>
+   </tbody>
+  </table>
+ </div>
+ <div aria-hidden="true" id="legend" role="presentation">
+  <h2>Legend</h2>
+  <p>
+   <strong>Attendance Codes:</strong>
+   Blank=Present <span class="disclaimer">|</span>
+   FT=AUTH-Field Trip <span class="disclaimer">|</span>
+   IA=AUTH-On Campus <span class="disclaimer">|</span>
+   OA=AUTH-Off Campus <span class="disclaimer">|</span>
+   AA=EA-Approved Activity <span class="disclaimer">|</span>
+   EA=EA-Excused Absence <span class="disclaimer">|</span>
+   FE=EA-Family Emergency <span class="disclaimer">|</span>
+   ME=EA-Medical/Sick <span class="disclaimer">|</span>
+   QE=EA-Health Excused <span class="disclaimer">|</span>
+   SS=EA-Suspended <span class="disclaimer">|</span>
+   EL=EL-Excused Late <span class="disclaimer">|</span>
+   LB=EL-Late Transport <span class="disclaimer">|</span>
+   LE=LE-Left Early Excused <span class="disclaimer">|</span>
+   LU=LU-Left Early Unexcused <span class="disclaimer">|</span>
+   UA=UA-Unexcused Absence <span class="disclaimer">|</span>
+   VU=UA-Unexcused Travel <span class="disclaimer">|</span>
+   UL=UL-Unexcused Late <span class="disclaimer">|</span>
+   A=A-Absent <span class="disclaimer">|</span>
+   L=L-Late <span class="disclaimer">|</span>
+  </p>
+ </div>
+ <input id="activeNav" type="hidden" value="">
+ <div id="cust-content-footer"></div>
+</div>
+</body></html>

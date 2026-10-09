@@ -29,6 +29,12 @@ own child's data (dashboards, notifications, personal archives).
 - Assignments via the `/ws/xte/assignment/lookup` XHR, including
   categories, due dates, scores, and the full flag set
   (late, missing, collected, exempt, incomplete, absent).
+- Attendance by day: the per-course grid of `attendance.html`, with real
+  dates, codes and the legend.
+- Grade history (`termgrades.html`): stored grades and credits.
+- Teacher comments per reporting term (`teachercomments.html`).
+- Every page read reports the student that same page marks as selected
+  (`PageStudent`), and fails closed when it marks none.
 - Session export/import for reusing a warm login across runs.
 - Typed errors with `IsAuthError` / `IsSessionExpired` /
   `IsNotFound` / `IsRateLimited` helpers.
@@ -113,6 +119,31 @@ marker moved (`ErrSwitchNotConfirmed` if not); `GetGrades(ctx, id)` uses it.
 marker the library returns `ErrSelectionUnknown` rather than guess. Do not
 read different students concurrently on one session. See
 [docs/SWITCH_STUDENT.md](docs/SWITCH_STUDENT.md).
+
+### More pages
+
+```go
+att, _ := client.GetAttendance(ctx)             // attendance.html
+for _, course := range att.Courses {
+    for _, day := range course.Days {
+        if day.Kind == powerschool.CellCode {
+            entry, _ := att.Describe(day.Code)
+            fmt.Println(course.CourseName, day.Date.Format("2006-01-02"), day.Code, entry.Description)
+        }
+    }
+}
+
+history, _ := client.GetGradeHistoryPage(ctx)   // termgrades.html
+comments, _ := client.GetTeacherComments(ctx, "Q1") // teachercomments.html?fg=Q1
+```
+
+Each result has a `Student` field (`PageStudent`): the student that page's
+own switcher marks as selected. These pages show the session's selected
+student whatever you had in mind, so compare `Student.SelectedID` with the
+student you meant, for every page; the parsers fail with
+`ErrSelectionUnknown` rather than return a page that marks nobody. Page
+shapes and what is still unverified:
+[docs/PAGES_STRUCTURE.md](docs/PAGES_STRUCTURE.md).
 
 A complete runnable version lives in
 [`cmd/test-auth/main.go`](cmd/test-auth/main.go) — a good first
@@ -209,10 +240,13 @@ management, the PII redactor, and adding tests for new behavior.
 | Students                   | working                          |
 | Grades                     | working                          |
 | Assignments (via XTE API)  | working + unit + integration test |
-| Progress reports           | partial                          |
-| Attendance                 | not yet                          |
+| Attendance by day          | structure verified live; code run on fixtures |
+| Grade history              | structure verified live; code run on fixtures |
+| Teacher comments           | structure verified live; non-empty comment fixture-only |
+| Multi-student switching    | working (`SelectStudent`), verified live |
+| Progress reports           | not implemented (`ErrNotImplemented`) |
+| GPA (`GetGPA`)             | text heuristic, unverified       |
 | Calendar/events            | not yet                          |
-| Multi-student switching    | not yet (home page shows one at a time) |
 
 ## Security
 
