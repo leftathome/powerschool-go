@@ -1,4 +1,21 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"]
+  "extends": ["config:recommended"],
+  "packageRules": [
+    {
+      "description": "chromedp and cdproto are a matched pair: cdproto is generated per chromedp release, and bumping either alone does not compile. Move them together.",
+      "matchPackageNames": ["github.com/chromedp/chromedp", "github.com/chromedp/cdproto"],
+      "groupName": "chromedp"
+    },
+    {
+      "description": "chromedp 0.15+ replaced the Action API (generic chromedp.Action[T], no ActionFunc/ByQuery); internal/browser and cmd/ need porting first. Hold on the 0.14 line until that port is done.",
+      "matchPackageNames": ["github.com/chromedp/chromedp"],
+      "allowedVersions": "<0.15.0"
+    },
+    {
+      "description": "cdproto must match the pinned chromedp; never take a bare digest or newer tag on its own.",
+      "matchPackageNames": ["github.com/chromedp/cdproto"],
+      "enabled": false
+    }
+  ]
 }

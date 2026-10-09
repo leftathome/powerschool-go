@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2026-10-09
+
+### Fixed
+
+- **Did not compile with Go 1.27.** The pinned
+  `github.com/go-json-experiment/json` (an indirect dependency through
+  `chromedp/cdproto`) aliases the standard library's `encoding/json/v2`,
+  whose API changed in Go 1.27 (`undefined: json.SkipFunc`,
+  `json.DiscardUnknownMembers`). Bumped it to a release that builds on Go
+  1.26 and 1.27. `chromedp` stays on v0.14.2 with its matching `cdproto`.
+- Reverted an automated `cdproto` digest bump that had been merged on its
+  own and left `main` uncompilable against `chromedp` v0.14.2. Renovate now
+  treats the two as a pair and holds `chromedp` below v0.15, whose rewritten
+  Action API needs a port of `internal/browser` first.
+
+### Added
+
+- A real-browser smoke test (`internal/browser`) that sets a cookie,
+  navigates, and reads back a JavaScript-modified DOM through headless
+  Chrome. It is the only runtime check of the DevTools-protocol encoding and
+  skips when no Chrome binary is installed or under `-short`.
+
 ## [0.1.0] - 2026-04-21
 
 First tagged release. The library drives PowerSchool through a real
