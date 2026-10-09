@@ -11,34 +11,47 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
-// GetGrades returns grades for the currently-selected student
-// This parses the grades table from the home page
-// Note: This returns grades for whichever student is currently displayed on the home page
+// GetGrades returns the grades table of the student the session has
+// selected.
+//
+// The portal's home page shows one student at a time:
+//
+//   - studentID == "": return the selected student's grades, whoever that is.
+//   - studentID != "": make that student the selected one first if it is
+//     not (SelectStudent), then return the grades from the page that
+//     confirmed the selection. The errors are SelectStudent's:
+//     ErrSelectionUnknown, ErrNotFound, ErrSwitchNotConfirmed.
+//
+// Each Grade carries the selected student's id, as parsed from the same
+// page, in Grade.StudentID; a row attributed to anyone but studentID fails
+// the call with ErrStudentNotSelected. Because a switch changes the
+// session's selection, calls for different students must not run
+// concurrently on one session.
 func (c *Client) GetGrades(ctx context.Context, studentID string) ([]*Grade, error) {
-	c.logger.Info("Fetching grades for student ID: %s", studentID)
+	c.logger.Info("Fetching grades")
 
-	// Ensure we're authenticated
-	if err := c.ensureAuthenticated(ctx); err != nil {
-		return nil, err
+	var page *HomePage
+	var err error
+	if studentID == "" {
+		page, err = c.GetHomePage(ctx)
+	} else {
+		page, err = c.SelectStudent(ctx, studentID)
 	}
-
-	// Grades are on the home page
-	// The home page shows the currently-selected student
-	// TODO: In future, implement student switching to get specific student's grades
-	html, err := c.getPageHTML(ctx, "/guardian/home.html")
 	if err != nil {
 		return nil, err
 	}
 
-	c.logger.Debug("Parsing grades from home page HTML")
-
-	grades, err := parseGradesFromHomePage(html)
-	if err != nil {
-		return nil, WrapParseError(err, "grades")
+	// The grades and the answer to "whose are they" come from one page.
+	if studentID != "" {
+		for _, g := range page.Grades {
+			if g.StudentID != studentID {
+				return nil, ErrStudentNotSelected
+			}
+		}
 	}
 
-	c.logger.Info("Found %d grade(s)", len(grades))
-	return grades, nil
+	c.logger.Info("Found %d grade(s)", len(page.Grades))
+	return page.Grades, nil
 }
 
 // GetGPA returns GPA information for a student
@@ -67,7 +80,11 @@ func parseGradesFromHomePage(html string) ([]*Grade, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse HTML: %w", err)
 	}
+	return parseGradesFromDoc(doc), nil
+}
 
+// parseGradesFromDoc is parseGradesFromHomePage on a parsed document.
+func parseGradesFromDoc(doc *goquery.Document) []*Grade {
 	var grades []*Grade
 
 	// the reference instance uses table#tblgrades with tr.center for data rows
@@ -198,7 +215,7 @@ func parseGradesFromHomePage(html string) ([]*Grade, error) {
 		}
 	})
 
-	return grades, nil
+	return grades
 }
 
 // parseGPA parses GPA information from HTML
@@ -447,17 +464,19 @@ func (c *Client) FetchScoresMetadata(ctx context.Context, scoresURL string) (*Sc
 		return nil, fmt.Errorf("scores URL is required (did you populate Grade.ScoresURL?)")
 	}
 
-	c.logger.Debug("Fetching scores metadata from: %s", scoresURL)
+	c.logger.Debug("Fetching scores metadata from: %s", pathOnly(scoresURL))
 
 	html, err := c.getPageHTMLWithWait(ctx, scoresURL, 3*time.Second)
 	if err != nil {
 		return nil, err
 	}
 
-	// If the server bounced us back to the login page, scoresURL was
-	// malformed (typically missing one of the required query params).
-	if strings.Contains(html, "Parent, Guardian, and Student Login") {
-		return nil, fmt.Errorf("scores page redirected to login — scoresURL %q is missing required query params (need frn+begdate+enddate+fg+schoolid)", scoresURL)
+	// The portal answers both a dead session and a scores URL that lacks
+	// one of its required query params (frn+begdate+enddate+fg+schoolid)
+	// with the login page; the two cannot be told apart from here. The URL
+	// is not put in the error: its query identifies a student's enrolment.
+	if isLoginPage(html) {
+		return nil, errLoginPage("scores page")
 	}
 
 	return parseScoresMetadata(html)

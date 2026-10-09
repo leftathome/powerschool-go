@@ -16,6 +16,10 @@ type Client struct {
 	session     *Session
 	httpClient  *http.Client
 	logger      *Logger
+
+	// httpPages routes post-login page reads through httpClient instead of
+	// a headless browser. See WithHTTPPageFetch.
+	httpPages bool
 }
 
 // Option configures the Client
@@ -231,7 +235,8 @@ func (c *Client) doRequestWithHeaders(ctx context.Context, method, path string, 
 	// Perform request
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return nil, WrapNetworkError(err)
+		// http.Client reports the full request URL, query included.
+		return nil, WrapNetworkError(redactURLError(err))
 	}
 
 	// Check for session expiration

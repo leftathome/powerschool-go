@@ -63,7 +63,8 @@ func main() {
 			fmt.Printf("School: %s\n", student.SchoolName)
 		}
 
-		// Get grades
+		// Get grades. The portal shows one student at a time; GetGrades
+		// switches the session to this student first and confirms it.
 		fmt.Println("\nGrades:")
 		grades, err := client.GetGrades(ctx, student.ID)
 		if err != nil {

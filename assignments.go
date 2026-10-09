@@ -3,11 +3,19 @@ package powerschool
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"net/http"
 	"strconv"
 	"time"
 )
+
+// AssignmentLookupPath is the one endpoint this library POSTs to after
+// login: the query the portal's own scores page issues to list a section's
+// assignments and scores. It changes nothing upstream. A caller that pins
+// the client to read-only traffic must let exactly this path through.
+const AssignmentLookupPath = "/ws/xte/assignment/lookup"
 
 // GetAssignments returns all assignments for the given student + course via
 // the /ws/xte/assignment/lookup API. The caller must pass a *Grade so that
@@ -23,7 +31,7 @@ func (c *Client) GetAssignments(ctx context.Context, studentID string, grade *Gr
 	}
 
 	courseID := grade.CourseID
-	c.logger.Info("Fetching assignments for student ID: %s, course ID: %s", studentID, courseID)
+	c.logger.Info("Fetching assignments for one course")
 
 	if err := c.ensureAuthenticated(ctx); err != nil {
 		return nil, err
@@ -44,11 +52,12 @@ func (c *Client) GetAssignments(ctx context.Context, studentID string, grade *Gr
 
 	sectionIDInt, err := strconv.ParseInt(grade.SectionID, 10, 64)
 	if err != nil {
-		return nil, fmt.Errorf("invalid section ID %q: %w", grade.SectionID, err)
+		return nil, WrapParseError(errors.New("section ID is not numeric"), "scores metadata")
 	}
 	studentIDInt, err := strconv.ParseInt(grade.StudentAPIID, 10, 64)
 	if err != nil {
-		return nil, fmt.Errorf("invalid student API ID %q: %w", grade.StudentAPIID, err)
+		// The value identifies a student; it stays out of the error.
+		return nil, WrapParseError(errors.New("student API ID is not numeric"), "scores metadata")
 	}
 	_ = studentID // accepted for API parity; effective value comes from the scores page
 
@@ -82,7 +91,7 @@ func (c *Client) GetAssignments(ctx context.Context, studentID string, grade *Gr
 	// Any scores.html URL on the same host satisfies the check, so we use
 	// the captured Grade.ScoresURL so the Referer matches what a browser
 	// would send.
-	path := fmt.Sprintf("/ws/xte/assignment/lookup?_=%d", time.Now().UnixMilli())
+	path := fmt.Sprintf("%s?_=%d", AssignmentLookupPath, time.Now().UnixMilli())
 	headers := map[string]string{
 		"Referer": c.baseURL + grade.ScoresURL,
 	}
@@ -93,17 +102,27 @@ func (c *Client) GetAssignments(ctx context.Context, studentID string, grade *Gr
 	}
 	defer resp.Body.Close()
 
-	// Check response status
-	if resp.StatusCode != 200 {
-		body, _ := io.ReadAll(resp.Body)
-		c.logger.Debug("API error response (status %d): %s", resp.StatusCode, string(body))
-		return nil, fmt.Errorf("API request failed with status %d: %s", resp.StatusCode, truncateString(string(body), 200))
-	}
-
-	// Read response body
-	body, err := io.ReadAll(resp.Body)
+	// Read response body (capped; the lookup for one section is small).
+	body, err := io.ReadAll(io.LimitReader(resp.Body, maxPageBytes))
 	if err != nil {
 		return nil, WrapNetworkError(err)
+	}
+
+	// The response body names assignments and scores and, on an error
+	// page, can echo the request. It is never put in an error; the status
+	// and the body size are enough to diagnose. Debug logging (opt-in)
+	// still shows a prefix.
+	if resp.StatusCode != http.StatusOK {
+		c.logger.Debug("API error response (status %d): %s", resp.StatusCode, truncateString(string(body), 500))
+		return nil, WrapNetworkError(&HTTPStatusError{
+			Op:         "POST " + AssignmentLookupPath,
+			StatusCode: resp.StatusCode,
+			BodyLen:    len(body),
+		})
+	}
+	if isLoginPage(string(body)) {
+		c.session = nil
+		return nil, errLoginPage("assignment lookup")
 	}
 
 	c.logger.Debug("API response (first 500 chars): %s", truncateString(string(body), 500))
@@ -112,7 +131,8 @@ func (c *Client) GetAssignments(ctx context.Context, studentID string, grade *Gr
 	var apiAssignments []APIAssignment
 	if err := json.Unmarshal(body, &apiAssignments); err != nil {
 		c.logger.Debug("Failed to parse JSON, response was: %s", truncateString(string(body), 1000))
-		return nil, fmt.Errorf("failed to parse API response: %w", err)
+		// encoding/json errors quote the offending value; keep only the kind.
+		return nil, WrapParseError(fmt.Errorf("response is not the expected JSON (%T, %d bytes)", err, len(body)), "assignment lookup")
 	}
 
 	// Convert API response to Assignment objects
@@ -219,7 +239,7 @@ func (c *Client) GetAssignmentCategories(ctx context.Context, studentID string, 
 	if grade == nil {
 		return nil, fmt.Errorf("grade is required")
 	}
-	c.logger.Info("Fetching assignment categories for course ID: %s", grade.CourseID)
+	c.logger.Info("Fetching assignment categories for one course")
 
 	assignments, err := c.GetAssignments(ctx, studentID, grade)
 	if err != nil {

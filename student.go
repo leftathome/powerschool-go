@@ -12,31 +12,84 @@ import (
 	"github.com/leftathome/powerschool-go/internal/browser"
 )
 
-// GetStudents returns all students accessible to the authenticated account
-// This extracts student IDs from the navigation bar's switchStudent() JavaScript calls
-func (c *Client) GetStudents(ctx context.Context) ([]*Student, error) {
-	c.logger.Info("Fetching students from home page")
+// HomePage is everything the library reads from one fetch of
+// /guardian/home.html: the account's students and the grades table of the
+// student the session has selected.
+type HomePage struct {
+	// Students lists every student in the switcher, in page order. At most
+	// one has Selected set.
+	Students []*Student
+	// Grades is the grades table. It belongs to SelectedStudent(); when
+	// that is nil the page did not say whose grades these are.
+	Grades []*Grade
+}
 
-	// Ensure we're authenticated
+// SelectedStudent returns the student the page explicitly marked as
+// selected, or nil when it marked none.
+func (h *HomePage) SelectedStudent() *Student {
+	if h == nil {
+		return nil
+	}
+	for _, s := range h.Students {
+		if s != nil && s.Selected {
+			return s
+		}
+	}
+	return nil
+}
+
+// GetHomePage fetches /guardian/home.html once and parses both the student
+// switcher and the grades table from that single response, so the grades
+// and the "which student is selected" answer cannot come from two different
+// states of the session.
+//
+// Every returned Grade carries the selected student's id in Grade.StudentID
+// ("" when the page has no explicit marker).
+func (c *Client) GetHomePage(ctx context.Context) (*HomePage, error) {
+	c.logger.Info("Fetching home page")
+
 	if err := c.ensureAuthenticated(ctx); err != nil {
 		return nil, err
 	}
 
-	// Get the home page HTML
 	html, err := c.getPageHTML(ctx, "/guardian/home.html")
 	if err != nil {
 		return nil, err
 	}
+	return parseHomePage(html)
+}
 
-	c.logger.Debug("Parsing students from home page HTML")
-
-	students, err := parseStudentsFromHomePage(html)
+// parseHomePage parses the students and the grades out of one home page.
+func parseHomePage(html string) (*HomePage, error) {
+	doc, err := goquery.NewDocumentFromReader(strings.NewReader(html))
+	if err != nil {
+		return nil, WrapParseError(err, "home page")
+	}
+	students, err := parseStudentsFromDoc(doc)
 	if err != nil {
 		return nil, WrapParseError(err, "students list")
 	}
+	page := &HomePage{Students: students, Grades: parseGradesFromDoc(doc)}
+	if sel := page.SelectedStudent(); sel != nil {
+		for _, g := range page.Grades {
+			g.StudentID = sel.ID
+		}
+	}
+	return page, nil
+}
 
-	c.logger.Info("Found %d student(s)", len(students))
-	return students, nil
+// GetStudents returns all students accessible to the authenticated account.
+// This extracts student IDs from the navigation bar's switchStudent()
+// JavaScript calls. The student the page explicitly marks as selected has
+// Selected set and carries the page-level details (StudentNumber, ...); if
+// the page marks nobody, no student is enriched.
+func (c *Client) GetStudents(ctx context.Context) ([]*Student, error) {
+	page, err := c.GetHomePage(ctx)
+	if err != nil {
+		return nil, err
+	}
+	c.logger.Info("Found %d student(s)", len(page.Students))
+	return page.Students, nil
 }
 
 // GetStudent returns information about a specific student
@@ -68,9 +121,13 @@ func (c *Client) getPageHTMLWithWait(ctx context.Context, path string, waitTime 
 		return "", ErrSessionExpired
 	}
 
+	if c.httpPages {
+		return c.getPageHTMLOverHTTP(ctx, path)
+	}
+
 	fullURL := c.buildURL(path)
 
-	c.logger.Debug("Fetching page: %s (wait: %v)", fullURL, waitTime)
+	c.logger.Debug("Fetching page: %s (wait: %v)", pathOnly(path), waitTime)
 
 	// Use browser automation to get the page content with session cookies
 	html, err := browser.GetPageContentWithWait(ctx, fullURL, c.session.GetCookies(), 30*time.Second, waitTime)
@@ -83,6 +140,10 @@ func (c *Client) getPageHTMLWithWait(ctx context.Context, path string, waitTime 
 	return html, nil
 }
 
+// switchStudentRE matches the student switcher's href, e.g.
+// javascript:switchStudent(111111);
+var switchStudentRE = regexp.MustCompile(`javascript:switchStudent\((\d+)\)`)
+
 // parseStudentsFromHomePage parses student information from the Guardian home page
 // Looks for switchStudent(ID) JavaScript calls in the navigation bar
 func parseStudentsFromHomePage(html string) ([]*Student, error) {
@@ -90,130 +151,119 @@ func parseStudentsFromHomePage(html string) ([]*Student, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse HTML: %w", err)
 	}
+	return parseStudentsFromDoc(doc)
+}
 
+// parseStudentsFromDoc is parseStudentsFromHomePage on a parsed document.
+//
+// Each student appears once, in page order, even when the switcher is
+// rendered more than once (desktop and mobile navigation).
+func parseStudentsFromDoc(doc *goquery.Document) ([]*Student, error) {
 	var students []*Student
+	seen := make(map[string]bool)
 
-	// Pattern to match: javascript:switchStudent(111111);
-	switchStudentPattern := regexp.MustCompile(`javascript:switchStudent\((\d+)\)`)
-
-	// Find all links with switchStudent JavaScript
 	doc.Find("a[href*='switchStudent']").Each(func(i int, s *goquery.Selection) {
 		href, exists := s.Attr("href")
 		if !exists {
 			return
 		}
-
-		matches := switchStudentPattern.FindStringSubmatch(href)
+		matches := switchStudentRE.FindStringSubmatch(href)
 		if len(matches) < 2 {
 			return
 		}
-
 		studentID := matches[1]
 		studentName := strings.TrimSpace(s.Text())
-
-		if studentID != "" && studentName != "" {
-			students = append(students, &Student{
-				ID:   studentID,
-				Name: studentName,
-			})
+		if studentID == "" || studentName == "" || seen[studentID] {
+			return
 		}
+		seen[studentID] = true
+		students = append(students, &Student{ID: studentID, Name: studentName})
 	})
-
-	// If we found students via switchStudent, try to get more details from the page
-	if len(students) > 0 {
-		// Try to extract additional details from the currently displayed student info
-		enrichStudentDetails(doc, students)
-	}
 
 	if len(students) == 0 {
 		return nil, fmt.Errorf("no students found in HTML (looked for switchStudent JavaScript calls)")
 	}
 
+	enrichStudentDetails(doc, students)
 	return students, nil
 }
 
-// enrichStudentDetails tries to extract additional student details from the page
-// This looks for the table.student-demo element that contains student details
+// selectedStudentID returns the id of the student the page explicitly marks
+// as selected (#students-list li.selected), or "" when the page carries no
+// such marker or marks more than one student.
+//
+// There is deliberately no fallback. The page-level details (the
+// student-demo table, the grades table) describe whichever student the
+// session has selected; guessing "the first one" when the marker is absent
+// attaches one child's records to another child's id.
+func selectedStudentID(doc *goquery.Document) string {
+	ids := make(map[string]bool)
+	doc.Find("#students-list li.selected a[href*='switchStudent']").Each(func(i int, s *goquery.Selection) {
+		href, _ := s.Attr("href")
+		if m := switchStudentRE.FindStringSubmatch(href); len(m) > 1 {
+			ids[m[1]] = true
+		}
+	})
+	if len(ids) != 1 {
+		return ""
+	}
+	for id := range ids {
+		return id
+	}
+	return ""
+}
+
+// enrichStudentDetails marks the explicitly selected student (Selected) and
+// copies the page-level details -- the table.student-demo rows and the
+// school name -- onto that student. When the page does not say which
+// student is selected, nobody is marked and nobody is enriched.
 func enrichStudentDetails(doc *goquery.Document, students []*Student) {
-	if len(students) == 0 {
+	selectedID := selectedStudentID(doc)
+	if selectedID == "" {
 		return
 	}
 
-	// First, find which student is currently selected
-	// the reference instance marks the selected student with class="selected" in the student list
-	var selectedStudentID string
-	doc.Find("#students-list li.selected a").Each(func(i int, s *goquery.Selection) {
-		href, exists := s.Attr("href")
-		if exists {
-			// Extract ID from javascript:switchStudent(111112);
-			switchStudentPattern := regexp.MustCompile(`javascript:switchStudent\((\d+)\)`)
-			matches := switchStudentPattern.FindStringSubmatch(href)
-			if len(matches) > 1 {
-				selectedStudentID = matches[1]
-			}
-		}
-	})
-
-	// If no selected student found, check for non-selected students and use first one
-	// (page might default to showing the first student without marking it selected)
-	if selectedStudentID == "" && len(students) > 0 {
-		selectedStudentID = students[0].ID
-	}
-
-	// Find the student object that matches the selected ID
 	var currentStudent *Student
 	for _, student := range students {
-		if student.ID == selectedStudentID {
+		if student.ID == selectedID {
 			currentStudent = student
 			break
 		}
 	}
-
-	// If we couldn't determine which student is selected, use the first one
-	if currentStudent == nil && len(students) > 0 {
-		currentStudent = students[0]
+	if currentStudent == nil {
+		return
 	}
+	currentStudent.Selected = true
 
-	// the reference instance structure: <table class="student-demo" role="presentation">
-	// with rows like: <tr><td class="lbl">Student ID #:</td><td>8199499</td></tr>
+	// Reference structure: <table class="student-demo" role="presentation">
+	// with rows like: <tr><td class="lbl">Student ID #:</td><td>9000001</td></tr>
 	doc.Find("table.student-demo tr").Each(func(i int, row *goquery.Selection) {
-		label := strings.TrimSpace(row.Find("td.lbl").Text())
-		value := ""
-
-		// Get the second td (the value)
-		row.Find("td").Each(func(j int, cell *goquery.Selection) {
-			if j == 1 { // Second cell contains the value
-				value = strings.TrimSpace(cell.Text())
-			}
-		})
-
+		label := strings.ToLower(strings.TrimSpace(row.Find("td.lbl").Text()))
+		value := strings.TrimSpace(row.Find("td").Eq(1).Text())
 		if value == "" {
 			return
 		}
 
-		// Parse based on label and apply to the currently selected student
 		switch {
-		case strings.Contains(strings.ToLower(label), "student id #"):
+		case strings.Contains(label, "student id #"):
 			currentStudent.StudentNumber = value
-		case strings.Contains(strings.ToLower(label), "state id #"):
+		case strings.Contains(label, "state id #"):
 			currentStudent.StateID = value
-		case strings.Contains(strings.ToLower(label), "grade level"):
+		case strings.Contains(label, "grade level"):
 			if gradeLevel, err := strconv.Atoi(value); err == nil {
 				currentStudent.GradeLevel = gradeLevel
 			}
-		case strings.Contains(strings.ToLower(label), "student portal username") ||
-			strings.Contains(strings.ToLower(label), "email"):
+		case strings.Contains(label, "student portal username") ||
+			strings.Contains(label, "email"):
 			currentStudent.PortalUsername = value
-		case strings.Contains(strings.ToLower(label), "source username"):
+		case strings.Contains(label, "source username"):
 			currentStudent.SourceUsername = value
 		}
 	})
 
-	// Also look for school name in the page
-	// the reference instance shows: <div id="print-school">the reference school district<br><span>Example Middle School</span></div>
+	// Reference structure: <div id="print-school">District<br><span>Example Middle School</span></div>
 	doc.Find("#print-school span").Each(func(i int, s *goquery.Selection) {
-		schoolName := strings.TrimSpace(s.Text())
-		if schoolName != "" {
+		if schoolName := strings.TrimSpace(s.Text()); schoolName != "" {
 			currentStudent.SchoolName = schoolName
 		}
 	})
@@ -242,41 +292,4 @@ func extractValueAfterLabel(s *goquery.Selection, text string) string {
 	}
 
 	return ""
-}
-
-// SwitchStudent switches to a different student context
-// This may require calling the switchStudent JavaScript function
-// For now, we'll just update subsequent requests to include the student ID
-func (c *Client) SwitchStudent(ctx context.Context, studentID string) error {
-	c.logger.Info("Switching to student ID: %s", studentID)
-
-	// The switchStudent JavaScript likely sets a session variable
-	// We can simulate this by navigating to a page with the student context
-	// Based on the pattern, we might need to call the actual JavaScript or
-	// make a request that triggers the switch
-
-	// For now, we'll attempt to navigate to the home page which should
-	// switch context, but we may need to adjust this based on how it actually works
-
-	// One approach: use browser automation to execute the JavaScript
-	session := c.GetSession()
-	if session == nil {
-		return ErrSessionExpired
-	}
-
-	fullURL := c.GetBaseURL() + "/guardian/home.html"
-
-	// Use browser to execute the switch
-	html, err := browser.GetPageContent(ctx, fullURL, session.GetCookies(), 30*time.Second)
-	if err != nil {
-		return WrapNetworkError(err)
-	}
-
-	// TODO: Actually execute: javascript:switchStudent(studentID)
-	// This might require enhancing the browser package to execute arbitrary JavaScript
-
-	_ = html // TODO: verify switch was successful
-
-	c.logger.Info("Student switch completed")
-	return nil
 }

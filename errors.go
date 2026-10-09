@@ -33,7 +33,47 @@ var (
 
 	// ErrNetworkError indicates a network error occurred
 	ErrNetworkError = errors.New("network error")
+
+	// ErrSelectionUnknown indicates the page does not explicitly mark which
+	// student the session has selected, so its contents cannot be
+	// attributed to a student.
+	ErrSelectionUnknown = errors.New("page does not mark which student is selected")
+
+	// ErrStudentNotSelected indicates the session has a different student
+	// selected than the one asked for.
+	ErrStudentNotSelected = errors.New("the requested student is not the one the session has selected")
+
+	// ErrSwitchNotConfirmed indicates the student-switch form was posted
+	// but the page read afterwards does not mark the requested student as
+	// selected.
+	ErrSwitchNotConfirmed = errors.New("student switch was not confirmed by the page")
 )
+
+// HTTPStatusError reports an unexpected HTTP status. It carries the status
+// and the size of the response body, never the body itself or the request's
+// query string: both can identify a student.
+type HTTPStatusError struct {
+	// Op names the request, e.g. "GET /guardian/home.html" (no query).
+	Op string
+	// StatusCode is the HTTP status received.
+	StatusCode int
+	// BodyLen is the number of body bytes read (capped), for diagnosis.
+	BodyLen int
+}
+
+// Error implements the error interface.
+func (e *HTTPStatusError) Error() string {
+	return fmt.Sprintf("%s: unexpected HTTP status %d (%d-byte body)", e.Op, e.StatusCode, e.BodyLen)
+}
+
+// errLoginPage is the typed session error for "the portal answered with its
+// login page". what names the page that was asked for, without its query.
+func errLoginPage(what string) error {
+	return NewError(CodeSessionExpired,
+		"the portal returned its login page in place of the "+what+
+			" (session expired or rejected, or the request lacked required parameters)",
+		ErrSessionExpired)
+}
 
 // ErrorCode represents an error code
 type ErrorCode string

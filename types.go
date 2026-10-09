@@ -17,6 +17,12 @@ type Student struct {
 	SchoolName     string
 	PortalUsername string // Student portal username/email
 	SourceUsername string // Source username
+	// Selected is true only for the student the home page explicitly marks
+	// as selected (#students-list li.selected). The page-level fields above
+	// (StudentNumber, StateID, GradeLevel, SchoolName, ...) are filled in
+	// for that student alone. When the page carries no marker no student
+	// has Selected set and none is enriched -- the library never guesses.
+	Selected bool
 }
 
 // Grade represents a course grade
@@ -33,6 +39,11 @@ type Grade struct {
 	// Student.ID; the two can differ. GetAssignments populates this lazily
 	// after its first call for this grade.
 	StudentAPIID     string
+	// StudentID is the switchStudent() nav id of the student the page this
+	// row was parsed from explicitly marked as selected -- that is, whose
+	// grade this is. Empty when the page carried no marker. Compare it
+	// with Student.ID before attributing the row to a student.
+	StudentID        string
 	CourseName       string
 	Section          string    // Course section
 	Teacher          string

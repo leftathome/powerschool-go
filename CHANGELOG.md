@@ -5,6 +5,81 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.2.0] - 2026-10-09
+
+Several changes below alter behaviour callers could have relied on -- in
+particular `GetGrades(ctx, id)` now submits the portal's switch-student form
+(an HTTP POST) when `id` is not the selected student, in browser mode as well
+as HTTP mode.
+
+Verified against a live two-student parent account on 2026-10-09: HTTP page
+fetch with explicitly attached cookies; `SelectStudent` in both directions,
+with the page confirming the selection each time; no cookie rotation on
+switch; selection is per session (an independent login still saw its own
+default); a course's `scores.html` reflects the SESSION's selected student,
+not the course link, and carries a distinct id per student. One further
+observation, seen once: a second login appeared to invalidate the first
+session. See [docs/SWITCH_STUDENT.md](docs/SWITCH_STUDENT.md) for what is
+still unconfirmed (single-student accounts, real session lifetime).
+
+### Fixed
+
+- A redirect was read as a dead session whenever the status was any 3xx.
+  Only a redirect whose `Location` is under `/public/` (or a 401/403) counts
+  now; a 304 or a redirect elsewhere no longer discards a working session.
+- **One student's details could be attached to another student.**
+  `GetStudents` copied the page-level details (student number, grade level,
+  school) onto `students[0]` whenever the page carried no
+  `#students-list li.selected` marker. Those details describe whichever
+  student the session has selected, so on markup without the marker a
+  second child's data was reported under the first child's id. The library
+  no longer guesses: only an explicit marker selects a student, and without
+  one nobody is enriched.
+- **`SwitchStudent` reported success without switching anything**, and
+  `GetGrades(ctx, studentID)` ignored `studentID`, so "switch, then read"
+  returned the previously selected student's grades under the new id.
+  `SwitchStudent` / `SelectStudent` now submit the portal's own switcher
+  form (`POST /guardian/home.html`, the single field
+  `selected_student_id`), read the home page again and require it to mark
+  the requested student as selected (`ErrSwitchNotConfirmed` otherwise;
+  `ErrSelectionUnknown` and nothing posted when the page carries no
+  marker). `GetGrades` switches first when needed and returns grades only
+  from the page that confirmed the selection.
+- A dead session answered with HTTP 200 and the sign-in form (no redirect)
+  was parsed as a page with no students. Page reads and the assignment
+  lookup now report it as a session-expired `*Error`.
+- Errors no longer carry response bodies, query strings or student ids.
+  The assignment lookup embedded 200 bytes of the response in its error;
+  `http.Client` errors carried the full URL with `frn` and `schoolid`.
+  Unexpected statuses are reported as `*HTTPStatusError` (operation, status,
+  body length).
+- INFO log lines no longer contain student ids, course ids or report
+  titles.
+
+### Added
+
+- `WithHTTPPageFetch` / `SetHTTPPageFetch` / `UsesHTTPPageFetch`: route
+  post-login page reads through the client's `http.Client` as plain GETs
+  instead of a headless browser, so a caller's transport sees every request.
+  Session cookies are attached to each request explicitly; no cookie jar is
+  involved.
+- `GetHomePage`: students and grades from a single fetch of the home page.
+- `SelectStudent`: switch (if needed), confirm, and return that student's
+  home page.
+- `Student.Selected`, `Grade.StudentID` (the selected student's id as parsed
+  from the grade's own page), `HomePage.SelectedStudent`.
+- `AssignmentLookupPath`, `SwitchStudentPath`, `SwitchStudentField`: the two
+  requests the library POSTs after login, for callers that allowlist them.
+
+### Changed
+
+- `GetStudents` lists each student once even when the switcher is rendered
+  more than once on the page.
+- Because a switch changes the session's selected student, calls for
+  different students must not run concurrently on one session.
+
 ## [0.1.2] - 2026-10-09
 
 ### Fixed

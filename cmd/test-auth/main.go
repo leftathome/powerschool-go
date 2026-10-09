@@ -163,7 +163,7 @@ func main() {
 			firstStudent := students[0]
 			// Try to find the student with complete details (the one currently displayed)
 			for _, s := range students {
-				if s.StudentNumber != "" {
+				if s.Selected {
 					firstStudent = s
 					break
 				}
