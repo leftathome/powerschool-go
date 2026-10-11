@@ -22,6 +22,13 @@ const AssignmentLookupPath = "/ws/xte/assignment/lookup"
 // Grade.ScoresURL is available — the scores page requires a fully-qualified
 // URL (frn+begdate+enddate+fg+schoolid) and that URL is also needed as the
 // Referer on the assignment-lookup POST.
+//
+// One Assignment is returned per entry of an assignment's
+// "_assignmentsections" (normally one). Its score, flags and teacher
+// comment (Assignment.TeacherComment) come from that section's FIRST
+// "_assignmentscores" entry; further entries are ignored. The same
+// response carries everything the portal's assignment detail dialog shows,
+// so the comment costs no extra request.
 func (c *Client) GetAssignments(ctx context.Context, studentID string, grade *Grade) ([]*Assignment, error) {
 	if grade == nil {
 		return nil, fmt.Errorf("grade is required")
@@ -163,12 +170,16 @@ func (c *Client) GetAssignments(ctx context.Context, studentID string, grade *Gr
 				for _, assoc := range section.CategoryAssociations {
 					if assoc.IsPrimary && assoc.TeacherCategory != nil {
 						assignment.Category = assoc.TeacherCategory.Name
+						assignment.CategoryDescription = htmlToText(assoc.TeacherCategory.Description)
 						break
 					}
 				}
 			}
 
-			// Get score information (if any)
+			// Get score information (if any). The lookup is issued for one
+			// student, so a section carries at most one score in practice;
+			// if it ever carries more, the first is the one used -- for the
+			// points, the flags and the teacher's comment alike.
 			if len(section.AssignmentScores) > 0 {
 				score := section.AssignmentScores[0]
 
@@ -223,6 +234,11 @@ func (c *Client) GetAssignments(ctx context.Context, studentID string, grade *Gr
 
 				// Set letter grade
 				assignment.LetterGrade = score.ScoreLetterGrade
+
+				// The teacher's note on this score, if any.
+				if score.ScoreComment != nil {
+					assignment.setTeacherComment(score.ScoreComment.CommentValue)
+				}
 			}
 
 			assignments = append(assignments, assignment)
@@ -345,6 +361,10 @@ type APIAssignmentScore struct {
 	IsCollected         bool    `json:"iscollected"`
 	AuthoredByUC        bool    `json:"authoredbyuc"`
 	StudentsDCID        int64   `json:"studentsdcid"`
+	// ScoreComment is the teacher's note on this score. Nil when the
+	// response has no "_assignmentscorecomment" member (the usual case:
+	// PowerSchool omits nulls) or the member is null.
+	ScoreComment *APIAssignmentScoreComment `json:"_assignmentscorecomment"`
 }
 
 // truncateString truncates a string to a maximum length

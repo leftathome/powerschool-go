@@ -7,6 +7,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-11
+
+Not tagged or released yet. Additive only: no existing field, function or
+behaviour changes.
+
+The teacher's note on a score is read from the assignment lookup the library
+already issues. The member names (`_assignmentscorecomment.commentvalue`)
+and the way the value is shown (as HTML, `white-space: pre-wrap`) come from
+the portal's own scripts for the class score page. **No live response
+containing a note has been seen**: in the live account looked at (key names
+only, 38 assignments / 30 scores) no score had one, so the member was absent
+throughout, as it is in the captured fixture. The decoding is therefore
+tested against invented fixtures only.
+
+### Added
+
+- `Assignment.TeacherComment`: the note a teacher left on the student's
+  score, as plain text -- character references decoded, tags removed, `<br>`
+  and block elements turned into line breaks, the teacher's own line breaks
+  kept, other whitespace collapsed, `<script>` / `<style>` content and
+  control characters dropped.
+- `Assignment.TeacherCommentHTML`: the same note as sent (trimmed, not
+  sanitised).
+- `Assignment.HasTeacherComment`: there is a note with text to read.
+- `Assignment.TeacherCommentTruncated` and `MaxTeacherCommentBytes` (16 KiB):
+  both comment fields are bounded, cut at a character boundary.
+- `Assignment.CategoryDescription`: the description of the assignment's
+  primary category, as plain text.
+- `APIAssignmentScore.ScoreComment` / `APIAssignmentScoreComment`: the
+  decoded member. Its decoder never fails -- the key absent, a null object,
+  a null, empty or non-string value, a member that is not an object, and
+  unknown extra members all mean "no comment" (or are ignored) instead of
+  failing `GetAssignments`.
+
+### Documented
+
+- Which score is used: `GetAssignments` returns one `Assignment` per section
+  of an assignment and reads that section's first score -- for the points,
+  the flags and now the comment. This is existing behaviour, now stated and
+  pinned by a test.
+
+### Changed
+
+- `golang.org/x/net` is a direct dependency (its HTML tokenizer; it was
+  already required indirectly, same version). `go mod tidy` also dropped two
+  unused indirect requirements.
+
+### Not included
+
+- When a note was written. The score's `scoreentrydate` / `whenmodified`
+  belong to the score, and the comment object's other members have not been
+  observed.
+- `Assignment.Description` still has its tags stripped and its character
+  references left as sent.
+
 ## [0.3.0] - 2026-10-09
 
 The three parsers below were run against a live two-student parent account

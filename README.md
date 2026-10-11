@@ -29,6 +29,8 @@ own child's data (dashboards, notifications, personal archives).
 - Assignments via the `/ws/xte/assignment/lookup` XHR, including
   categories, due dates, scores, and the full flag set
   (late, missing, collected, exempt, incomplete, absent).
+- The teacher's note on an individual score (the "notes" icon of the class
+  score page), as plain text and as sent, from that same lookup.
 - Attendance by day: the per-course grid of `attendance.html`, with real
   dates, codes and the legend.
 - Grade history (`termgrades.html`): stored grades and credits.
@@ -119,6 +121,59 @@ marker moved (`ErrSwitchNotConfirmed` if not); `GetGrades(ctx, id)` uses it.
 marker the library returns `ErrSelectionUnknown` rather than guess. Do not
 read different students concurrently on one session. See
 [docs/SWITCH_STUDENT.md](docs/SWITCH_STUDENT.md).
+
+### Teacher comments on an assignment
+
+A teacher can leave a note on one student's score; the portal marks such a
+row with a notes icon and shows the note in the assignment's detail dialog.
+`GetAssignments` returns it with the assignment -- it is in the lookup
+response already, so there is no extra request:
+
+```go
+assignments, _ := client.GetAssignments(ctx, s.ID, g)
+for _, a := range assignments {
+    if a.HasTeacherComment {
+        fmt.Printf("%s:\n%s\n", a.Title, a.TeacherComment)
+    }
+}
+```
+
+| Field | What it holds |
+| ----- | ------------- |
+| `TeacherComment` | The note as plain text: character references decoded, tags removed, `<br>` and block elements (`<p>`, `<div>`, `<li>`, ...) turned into line breaks, the teacher's own line breaks kept (at most one blank line in a row), other whitespace collapsed, `<script>`/`<style>` content and control characters dropped. |
+| `TeacherCommentHTML` | The note as PowerSchool sent it, trimmed. **Not sanitised** -- the portal renders it as HTML; do not put it in a page as is. |
+| `HasTeacherComment` | `TeacherComment != ""`: there is text to read. |
+| `TeacherCommentTruncated` | The note was longer than `MaxTeacherCommentBytes` (16 KiB) and one or both of the fields above were cut (at a character boundary). |
+| `CategoryDescription` | The teacher's description of the assignment's primary category, as plain text. |
+
+Things to know:
+
+- **Which score.** One `Assignment` is returned per section of an assignment
+  (normally one), and its score, flags and comment all come from that
+  section's first score entry. A comment is never taken from a different
+  score than the points beside it.
+- **No comment is the normal case.** PowerSchool leaves the comment member
+  out of a score that has none. Absent, null, empty, whitespace-only and
+  unexpectedly shaped values all give `HasTeacherComment == false` and never
+  fail the call.
+- **Markup-only notes.** A note with markup but no text (say, a lone image)
+  has `HasTeacherComment == false` and an empty `TeacherComment`, while
+  `TeacherCommentHTML` still carries it. The portal's icon shows for any
+  non-null note, so the two can differ for such a value.
+- **It is somebody else's free text.** Treat both fields as untrusted input
+  wherever they are shown or passed to another program (a template, a
+  shell, a language model).
+- **No timestamp.** The score's own dates are not the comment's, and the
+  comment object's other members have not been observed, so the library
+  does not say when a note was written. Compare the text to detect a new or
+  changed note.
+- **Verification.** The field names come from the portal's own page
+  scripts; no live response containing a note had been captured when this
+  was written, so the decoding is tested against invented fixtures only.
+  See [docs/API_ENDPOINTS.md](docs/API_ENDPOINTS.md).
+
+`Assignment.Description` is unchanged: tags stripped, character references
+left as sent.
 
 ### More pages
 
@@ -240,6 +295,7 @@ management, the PII redactor, and adding tests for new behavior.
 | Students                   | working                          |
 | Grades                     | working                          |
 | Assignments (via XTE API)  | working + unit + integration test |
+| Assignment teacher comment | field names from the portal's scripts; fixture-tested, no live comment seen |
 | Attendance by day          | structure verified live; code run on fixtures |
 | Grade history              | structure verified live; code run on fixtures |
 | Teacher comments           | structure verified live; non-empty comment fixture-only |
