@@ -111,8 +111,66 @@
 - `actualscorekind`: "REAL_SCORE" or other kind
 - `islate`, `ismissing`, `isincomplete`, `isabsent`, `isexempt`: Boolean flags
 - `iscollected`: Whether assignment was collected (for COLLECTED scoretype)
+- `_assignmentscorecomment.commentvalue`: The teacher's note on this score
+  (see "Score Comment" below). Usually absent.
+
+### Category Description
+- `_teachercategory.description`: Optional description of the category;
+  exposed as `Assignment.CategoryDescription` for the primary category.
 
 ## Special Cases
+
+### Score Comment (the "notes" icon)
+
+A score a teacher has left a note on carries one more member (the content
+here is invented):
+
+```json
+{
+  "_assignmentscores": [
+    {
+      "scorepoints": 8.0,
+      "_assignmentscorecomment": {
+        "_name": "assignmentscorecomment",
+        "commentvalue": "<p>Good start.</p><p>Redo question&nbsp;3:<br>show the steps.</p>"
+      }
+    }
+  ]
+}
+```
+
+Where this comes from: the portal's own static scripts for the class score
+page. The page's controller sets a `hasScoreComment` flag on each row when
+`_assignmentscorecomment` and its `commentvalue` are both non-null, the row
+shows a notes icon for it, and the assignment detail dialog renders
+`commentvalue` with an HTML binding under `white-space: pre-wrap`. So the
+value may hold markup and character references, and line breaks typed into it
+are meant.
+
+PowerSchool omits null members: a score without a note has no
+`_assignmentscorecomment` key at all (38 assignments / 30 scores of a live
+account were looked at, key names only; none had the key, and the captured
+fixture has none either). The library accepts the key absent, the object
+null, the value null, empty or not a string, and any extra members, and
+reports "no comment" for all of them.
+
+**Not yet seen live:** a response that actually contains a comment. The
+decoding is fixture-tested with invented content only. In particular the
+members of `_assignmentscorecomment` other than `commentvalue` (an author, a
+timestamp) are unknown, so the library exposes no "when was this written".
+
+How the library turns the value into `Assignment.TeacherComment`,
+`TeacherCommentHTML`, `HasTeacherComment` and `TeacherCommentTruncated` is
+described in the README ("Teacher comments on an assignment").
+
+### More Than One Section Or Score
+
+`GetAssignments` returns one `Assignment` per `_assignmentsections` entry and
+reads that section's **first** `_assignmentscores` entry, for the points, the
+flags and the comment alike. The lookup is issued for one section and one
+student, so one of each is what a response normally holds; further scores are
+ignored, and a comment is never taken from a different score than the points
+next to it.
 
 ### Collected Assignments (No Score)
 ```json
