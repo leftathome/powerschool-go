@@ -110,6 +110,36 @@ type Assignment struct {
 	LetterGrade   string
 	Status        AssignmentStatus
 	Flags         []AssignmentFlag // Collected, Late, Missing, etc.
+
+	// CategoryDescription is the teacher's description of the assignment's
+	// primary category (the one named in Category), as plain text. Empty
+	// when the category has none.
+	CategoryDescription string
+
+	// TeacherComment is the note the teacher left on this student's score
+	// for this assignment (the "notes" icon of the portal's class score
+	// page), as plain text: character references decoded, tags removed,
+	// <br> and block elements turned into line breaks, the teacher's own
+	// line breaks kept, other whitespace collapsed. Empty when there is no
+	// note. At most MaxTeacherCommentBytes long.
+	//
+	// It is free text written by a third party: treat it as untrusted
+	// input wherever it is displayed or handed to another program.
+	TeacherComment string
+	// TeacherCommentHTML is the same note as PowerSchool sent it (the
+	// portal renders it as HTML), with surrounding whitespace removed and
+	// cut to MaxTeacherCommentBytes. It is NOT sanitised: never put it in
+	// a page without sanitising it first.
+	TeacherCommentHTML string
+	// HasTeacherComment reports whether there is a note with text to
+	// read, i.e. TeacherComment != "". (The portal's own icon also shows
+	// for a note that is empty or markup only; TeacherCommentHTML still
+	// carries such a value.)
+	HasTeacherComment bool
+	// TeacherCommentTruncated is set when the note was longer than
+	// MaxTeacherCommentBytes and TeacherComment, TeacherCommentHTML or
+	// both were cut.
+	TeacherCommentTruncated bool
 }
 
 // AssignmentCategory represents a category of assignments with summary stats
