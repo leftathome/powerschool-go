@@ -252,6 +252,48 @@ func TestAlreadySubmitted(t *testing.T) {
 	}
 }
 
+// The two ways a sign-in that worked can fail to be recognised: the
+// signed-in page keeps the sign-in page's path, or it has a password field
+// of its own. The evidence must show which, and nothing else about the page.
+func TestEvidenceFrom_FalseNegativeShapes(t *testing.T) {
+	const want = "https://portal.example.org"
+	before := pageState{Origin: want, Href: want + "/public/?frn=0011223344", Path: "/public/", HasPassword: true, Document: 1000}
+
+	samePath := pageState{Origin: want, Href: want + "/public/?frn=0011223344&secret-query=1", Path: "/public/", Ready: "complete", Document: 2000}
+	ev := evidenceFrom(&samePath, before, want, 9*time.Second)
+	if *ev != (OutcomeEvidence{PageRead: true, NewDocument: true, PortalOrigin: true, PathChanged: false, PasswordField: false, ErrorBanner: false, Elapsed: 9 * time.Second}) {
+		t.Errorf("same-path shape: %+v", *ev)
+	}
+
+	passwordField := pageState{Origin: want, Href: want + "/guardian/secret-path.html", Path: "/guardian/secret-path.html", HasPassword: true, Ready: "complete", Document: 2000}
+	ev2 := evidenceFrom(&passwordField, before, want, 9*time.Second)
+	if *ev2 != (OutcomeEvidence{PageRead: true, NewDocument: true, PortalOrigin: true, PathChanged: true, PasswordField: true, ErrorBanner: false, Elapsed: 9 * time.Second}) {
+		t.Errorf("password-field shape: %+v", *ev2)
+	}
+
+	// Both are "unknown" to the success rule, which is why they need it.
+	if judgeOutcome(samePath, before, want) != outcomeUnknown || judgeOutcome(passwordField, before, want) != outcomeUnknown {
+		t.Errorf("these shapes are expected to be inconclusive")
+	}
+
+	never := evidenceFrom(nil, before, want, 3*time.Second)
+	if never.PageRead || never.Elapsed != 3*time.Second || !strings.Contains(never.String(), "could not be read") {
+		t.Errorf("no read: %+v / %s", *never, never)
+	}
+	foreign := pageState{Origin: "https://evil.example", Path: "/x", Document: 2000}
+	if ev := evidenceFrom(&foreign, before, want, time.Second); ev.PortalOrigin || !ev.NewDocument {
+		t.Errorf("foreign origin: %+v", *ev)
+	}
+
+	for _, e := range []*OutcomeEvidence{ev, ev2, never} {
+		err := &SignInError{Stage: StageAfterSubmit, Evidence: e, msg: "timed out while waiting for the portal's answer; " + e.String(), ctxErr: context.DeadlineExceeded}
+		assertNoSecret(t, err, "/public", "/guardian", "secret-path", "secret-query", "frn", "0011223344", "portal.example.org", "https://")
+	}
+	if got := ev.String(); got != "page last seen after waiting 9s: new document=true, portal origin=true, path changed=false, password field=false, error banner=false" {
+		t.Errorf("String() = %q", got)
+	}
+}
+
 func TestCookieDomainMatches(t *testing.T) {
 	for _, tc := range []struct {
 		host, domain string

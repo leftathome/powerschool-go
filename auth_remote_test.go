@@ -14,6 +14,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/leftathome/powerschool-go/internal/browser"
 	"github.com/leftathome/powerschool-go/internal/cdptest"
 )
 
@@ -328,6 +329,23 @@ func TestAuthenticateWithOptions_CredentialWithNewline(t *testing.T) {
 				assertRemoteErrorIsClean(t, err, &logs, remoteTestToken, remoteTestPassword, remoteTestUser)
 			})
 		}
+	}
+}
+
+func TestSignInEvidenceOf(t *testing.T) {
+	if _, ok := SignInEvidenceOf(errors.New("plain")); ok {
+		t.Errorf("evidence reported for a plain error")
+	}
+	if _, ok := SignInEvidenceOf(nil); ok {
+		t.Errorf("evidence reported for nil")
+	}
+	inner := &browser.SignInError{Stage: browser.StageAfterSubmit, Evidence: &SignInEvidence{PageRead: true, NewDocument: true, PortalOrigin: true, Elapsed: 9 * time.Second}}
+	ev, ok := SignInEvidenceOf(WrapAuthError(inner))
+	if !ok || !ev.NewDocument || !ev.PortalOrigin || ev.PathChanged || ev.Elapsed != 9*time.Second {
+		t.Errorf("SignInEvidenceOf = %+v, %v", ev, ok)
+	}
+	if !errors.Is(WrapAuthError(inner), ErrCredentialsSubmitted) {
+		t.Errorf("the error is not ErrCredentialsSubmitted")
 	}
 }
 

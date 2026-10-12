@@ -102,6 +102,27 @@ var (
 	ErrCredentialsSubmitted = browser.ErrSubmitted
 )
 
+// SignInEvidence is what was last seen of the page when a submitted remote
+// sign-in ended without a conclusive answer: yes/no observations and a
+// duration, never a URL, a path, a title, page text or cookies. See
+// SignInEvidenceOf.
+type SignInEvidence = browser.OutcomeEvidence
+
+// SignInEvidenceOf returns the evidence attached to err, if any. It is
+// attached to an ErrCredentialsSubmitted error of a remote sign-in that
+// stopped (timeout, cancellation, lost browser) while waiting for the
+// portal's answer, and is also part of that error's text. A sign-in that
+// actually worked but was not recognised shows up here as, for example,
+// "new document, portal origin, path not changed" or "password field
+// present".
+func SignInEvidenceOf(err error) (SignInEvidence, bool) {
+	var se *browser.SignInError
+	if errors.As(err, &se) && se.Evidence != nil {
+		return *se.Evidence, true
+	}
+	return SignInEvidence{}, false
+}
+
 // HTTPStatusError reports an unexpected HTTP status. It carries the status
 // and the size of the response body, never the body itself or the request's
 // query string: both can identify a student.

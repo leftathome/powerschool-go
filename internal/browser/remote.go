@@ -112,6 +112,10 @@ type SignInError struct {
 	Rejected bool
 	// Origin is set when the page was not on the portal's origin.
 	Origin bool
+	// Evidence is set when the sign-in ended while waiting for the
+	// portal's answer without a conclusive one: what was last seen of
+	// the page, as yes/no observations only.
+	Evidence *OutcomeEvidence
 
 	local  bool // raised by the local flow
 	msg    string
@@ -312,8 +316,15 @@ func authenticateRemote(ctx context.Context, opts *AuthenticateOptions) (_ *Auth
 		cookies   []*network.Cookie
 		workCtx   = setupCtx
 	)
+	// waiting is set while the portal's answer is waited for.
+	var waiting func() *OutcomeEvidence
 	fail := func(err error) error {
-		return classifyRemote(err, step, submitted.Load(), ctx, workCtx, a.b, red)
+		e := classifyRemote(err, step, submitted.Load(), ctx, workCtx, a.b, red)
+		if waiting != nil && !e.Rejected {
+			e.Evidence = waiting()
+			e.msg += "; " + e.Evidence.String()
+		}
+		return e
 	}
 	named := func(name string, action chromedp.Action) chromedp.Action {
 		return chromedp.ActionFunc(func(ctx context.Context) error {
@@ -423,10 +434,17 @@ func authenticateRemote(ctx context.Context, opts *AuthenticateOptions) (_ *Auth
 			// There is no "probably fine": this returns on positive
 			// evidence either way, or not at all. A failed evaluation
 			// (a navigation in flight) is not evidence.
+			started := time.Now()
+			var last *pageState
+			waiting = func() *OutcomeEvidence {
+				return evidenceFrom(last, before, wantOrigin, time.Since(started))
+			}
 			for {
 				if st, err := readPageState(ctx); err == nil {
+					last = &st
 					switch judgeOutcome(st, before, wantOrigin) {
 					case outcomeAccepted:
+						waiting = nil
 						return nil
 					case outcomeRejected:
 						return ErrRejected

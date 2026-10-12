@@ -312,6 +312,24 @@ func TestReviewReal_RemoteSignIn(t *testing.T) {
 		if errors.Is(err, ErrRejected) {
 			t.Errorf("a page without the banner was reported as a rejection: %v", err)
 		}
+		// The error says, in yes/no terms only, what the page looked
+		// like: here a new document on another path that still has a
+		// password field.
+		var se *SignInError
+		if !errors.As(err, &se) || se.Evidence == nil {
+			t.Fatalf("no evidence attached to %v", err)
+		}
+		ev := *se.Evidence
+		if !ev.PageRead || !ev.NewDocument || !ev.PortalOrigin || !ev.PathChanged || !ev.PasswordField || ev.ErrorBanner {
+			t.Errorf("evidence = %+v", ev)
+		}
+		if ev.Elapsed < 3*time.Second || ev.Elapsed > 12*time.Second {
+			t.Errorf("elapsed = %v", ev.Elapsed)
+		}
+		if !strings.Contains(err.Error(), "password field=true") || !strings.Contains(err.Error(), "path changed=true") {
+			t.Errorf("the evidence is not in the error text: %v", err)
+		}
+		assertNoSecret(t, err, "/guardian", "home.html", "/public", "Sign In", "LoginForm", "prelogin", "pre=", "127.0.0.1", "http://", testPassword, testUsername)
 	})
 
 	// 2. A sign-in URL that redirects to another origin showing a form

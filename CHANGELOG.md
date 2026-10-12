@@ -40,6 +40,14 @@ to it (see "Changed").
   - The form is submitted at most once per call: a click that fails is
     never followed by another control or by the Enter key, and a page
     that submits itself while being filled is not clicked.
+- `SignInEvidenceOf(err)` / `SignInEvidence`: when a remote sign-in ends
+  as "outcome unknown" while waiting for the portal's answer, the error
+  carries (and prints) what was last seen of the page as yes/no
+  observations and the time waited: new document, still the portal's
+  origin, path changed, password field present, error banner seen. No
+  URL, path, title, page text or cookie. It makes a sign-in that worked
+  but was not recognised (signed-in page on the same path, or with a
+  password field) diagnosable from one attempt.
 - `Client.BrowserContextDisposalUnconfirmed()`: true when the most recent
   successful remote sign-in ended without the remote browser confirming
   the disposal of its browser context. The sign-in still succeeds.

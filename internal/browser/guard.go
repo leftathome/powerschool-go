@@ -2,9 +2,11 @@ package browser
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"net/url"
 	"strings"
+	"time"
 	"unicode"
 
 	"github.com/chromedp/cdproto/network"
@@ -236,6 +238,56 @@ func judgeOutcome(now, before pageState, want string) signInOutcome {
 		return outcomeAccepted
 	}
 	return outcomeUnknown
+}
+
+// OutcomeEvidence is what was last seen of the page when a submitted
+// sign-in ended without a conclusive answer. It is there to tell, from one
+// failed attempt, why a sign-in that may well have worked was not
+// recognised as one. It holds only yes/no observations and a duration:
+// never a URL, a path, a title, page text or anything about cookies.
+type OutcomeEvidence struct {
+	// PageRead: the page could be read at least once after the
+	// submission. When false, the other observations are all false and
+	// mean nothing.
+	PageRead bool
+	// NewDocument: a different document from the one that was filled in.
+	NewDocument bool
+	// PortalOrigin: the page is on the portal's own origin.
+	PortalOrigin bool
+	// PathChanged: the page's path differs from the sign-in page's.
+	PathChanged bool
+	// PasswordField: the page has a password field.
+	PasswordField bool
+	// ErrorBanner: the page shows the portal's sign-in error banner.
+	ErrorBanner bool
+	// Elapsed: how long the answer was waited for.
+	Elapsed time.Duration
+}
+
+// String renders the evidence for an error message.
+func (e OutcomeEvidence) String() string {
+	waited := "after waiting " + e.Elapsed.Round(100*time.Millisecond).String()
+	if !e.PageRead {
+		return "the page could not be read " + waited
+	}
+	return fmt.Sprintf("page last seen %s: new document=%t, portal origin=%t, path changed=%t, password field=%t, error banner=%t",
+		waited, e.NewDocument, e.PortalOrigin, e.PathChanged, e.PasswordField, e.ErrorBanner)
+}
+
+// evidenceFrom reduces the last page read after a submission to yes/no
+// observations. last is nil when no read succeeded.
+func evidenceFrom(last *pageState, before pageState, want string, elapsed time.Duration) *OutcomeEvidence {
+	ev := &OutcomeEvidence{Elapsed: elapsed}
+	if last == nil {
+		return ev
+	}
+	ev.PageRead = true
+	ev.NewDocument = last.Document != 0 && last.Document != before.Document
+	ev.PortalOrigin = checkOrigin(last.Origin, want) == nil
+	ev.PathChanged = last.Path != before.Path
+	ev.PasswordField = last.HasPassword
+	ev.ErrorBanner = last.Rejected
+	return ev
 }
 
 // cookieURLs are the URLs whose cookies make up the session: the portal's
