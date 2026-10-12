@@ -7,8 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Planned as 0.5.0. Additive: with `BrowserURL` unset, the sign-in is the
-same code path as in 0.4.0.
+Planned as 0.5.0. With `BrowserURL` unset the sign-in still starts a local
+Chrome and drives it as in 0.4.0, with three added checks that also apply
+to it (see "Changed").
 
 ### Added
 
@@ -26,37 +27,80 @@ same code path as in 0.4.0.
   - `Timeout` bounds the dial, the sign-in and the disposal.
   - The endpoint usually carries a token and is never logged or put in an
     error: it is shown as `scheme://host[:port]`, text from the dialer is
-    scrubbed, and the dialer's error is not kept in the error chain.
+    scrubbed, and the dialer's error is not kept in the error chain. A
+    DevTools protocol error is reported by its numeric code only, never by
+    the message the remote browser sent.
   - `UserDataDir`, `NoSandbox` and `Headless=false` cannot be combined
     with `BrowserURL`; doing so is an error, not silently ignored.
-- Sentinel errors reported by a remote sign-in, through `errors.Is`, in
-  addition to `IsAuthError`:
-  - `ErrCredentialsNotSubmitted` / `ErrCredentialsSubmitted`: whether the
-    one submission of the form had been started when the sign-in failed.
-  - `ErrBrowserConnection`: the remote browser could not be reached, or
-    went away during the sign-in.
-  - `ErrInvalidAuthOptions`: an unusable `BrowserURL` or a conflicting
-    option. Nothing was sent.
-  - A sign-in the portal rejects is `ErrInvalidCredentials` with
+  - Success is reported only on positive evidence that the browser left
+    the sign-in form (portal's origin, a new document on another path, no
+    password field). The portal's error banner is `ErrInvalidCredentials`;
+    no answer before `Timeout`, an unreadable page or a lost browser is
+    `ErrCredentialsSubmitted`, never success.
+  - The form is submitted at most once per call: a click that fails is
+    never followed by another control or by the Enter key, and a page
+    that submits itself while being filled is not clicked.
+- `Client.BrowserContextDisposalUnconfirmed()`: true when the most recent
+  successful remote sign-in ended without the remote browser confirming
+  the disposal of its browser context. The sign-in still succeeds.
+- Sentinel errors, through `errors.Is`, in addition to `IsAuthError`:
+  - `ErrCredentialsNotSubmitted` / `ErrCredentialsSubmitted` (remote
+    sign-in): whether the password had started to be typed into the page
+    when the sign-in failed. The line is drawn there, not at the click,
+    because a page can submit itself while it is being filled.
+    `ErrCredentialsSubmitted` means "outcome unknown".
+  - `ErrBrowserConnection` (remote sign-in): the remote browser could not
+    be reached, or went away during the sign-in.
+  - `ErrInvalidAuthOptions` (both): an unusable `BrowserURL`, a
+    conflicting option, or a credential that cannot be typed as text.
+    Nothing was sent. It never matches `ErrCredentialsNotSubmitted`, so a
+    caller that retries on that sentinel does not retry input that cannot
+    work.
+  - `ErrUnexpectedOrigin` (both): the page to sign in on was not on the
+    origin of the client's base URL.
+  - A remote sign-in the portal rejects is `ErrInvalidCredentials` with
     `CodeInvalidCredentials` (the local sign-in keeps reporting
     `CodeAuthFailed`, as before).
-- A remote sign-in submits the form at most once per call: a click that
-  fails is never followed by another control or by the Enter key.
+
+### Changed
+
+These apply to the local sign-in too, and are the only changes to it:
+
+- A username or password containing a line break, a tab, another control
+  character, or a character the browser automation types as a key is
+  refused with `ErrInvalidAuthOptions` before any browser is started. It
+  is not trimmed. Before, a trailing newline was typed as the Enter key
+  and submitted the form half filled, which could submit twice in one
+  call.
+- The credentials are typed and submitted only while the page is on the
+  origin (scheme, host, port) of the client's base URL; otherwise the
+  sign-in fails with `ErrUnexpectedOrigin`. Before, a sign-in URL that
+  redirected to another host showing a text and a password field was
+  handed the credentials. **A portal whose sign-in form is served from a
+  different origin than the base URL (another host name, another port, a
+  "www." variant) now fails**; there is no allow-list. A base URL whose
+  host is not plain ASCII must be given in its "xn--" form.
+- Only cookies that belong to the portal's host are kept in the session.
+  Before, every cookie the browser reported for the page and its frames
+  was kept, and the client sends every cookie it holds to the portal.
+- `github.com/gobwas/ws` is listed as a direct dependency (the tests use
+  it for a fake DevTools server and proxy; it was already required
+  indirectly, same version).
+
+Not changed in the local sign-in: it still reports success when no error
+banner shows three seconds after the click, and its failures match
+neither submission sentinel (treat them as outcome unknown).
 
 ### Security
 
 - In remote mode the password is typed into, and the session cookies
   briefly exist in, a browser the caller does not own. The isolation and
   disposal above limit what is left behind; they do not protect against
-  whoever operates that browser. See "Remote browser" in the README.
-
-### Changed
-
-- `github.com/gobwas/ws` is listed as a direct dependency (the tests use
-  it for a fake DevTools server; it was already required indirectly, same
-  version).
-- Internal only: the selector lists and the cookie conversion of the local
-  sign-in moved into shared declarations. No behaviour change.
+  whoever operates that browser, and a browser context does not isolate
+  the sign-in from other DevTools clients of the same browser. See
+  "Remote browser" in the README.
+- Known limit: the size of a DevTools message from the remote browser is
+  not bounded (the DevTools client offers no limit).
 
 ### Not included
 

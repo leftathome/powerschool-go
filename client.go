@@ -20,6 +20,9 @@ type Client struct {
 	// httpPages routes post-login page reads through httpClient instead of
 	// a headless browser. See WithHTTPPageFetch.
 	httpPages bool
+
+	// contextDisposalUnconfirmed: see BrowserContextDisposalUnconfirmed.
+	contextDisposalUnconfirmed bool
 }
 
 // Option configures the Client

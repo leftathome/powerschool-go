@@ -253,7 +253,9 @@ What the library does on a browser it shares with others:
   It is also created so that the browser discards it by itself when the
   connection closes, which covers a process that dies mid-way.
 - Nothing else in the browser is touched: the browser is never closed, and
-  no other context or page is closed, attached to or changed.
+  no other context or page is closed, attached to or changed. (This is
+  about what the library does to others, not what others can do to it:
+  see the note on other DevTools clients below.)
 - `Timeout` covers the dial, the sign-in and the disposal. After `ctx` is
   cancelled the call returns once the context is disposed: normally at
   once, a few seconds at most, and never later than `Timeout`.
@@ -261,45 +263,120 @@ What the library does on a browser it shares with others:
   Errors and logs show it as `scheme://host[:port]` and nothing else, and
   errors from the dialer are not kept in the error chain.
 
-What it cannot do: **in remote mode the password is typed into, and the
-session cookies briefly exist in, a browser you do not own.** Whoever
-operates that browser, and anything that can attach to it with the same
-token while the sign-in runs, can observe them. The traffic between your
-process and the browser carries the keystrokes and the cookies too: use
-`wss://`, or keep a `ws://` endpoint on a network you trust. Use a browser
-service you would trust with the account.
+What it cannot do:
+
+> **In remote mode the password is typed into, and the session cookies
+> briefly exist in, a browser you do not own.** Whoever operates that
+> browser can observe them.
+>
+> **A browser context does not isolate the sign-in from other DevTools
+> clients of the same browser.** It separates cookies and storage between
+> pages; it is not a boundary between the programs that control the
+> browser. Anything else that can connect to the same browser (the same
+> endpoint and token) while the sign-in runs can attach to its page, read
+> what is typed and read its cookies. Share the browser only with clients
+> you would trust with the account.
+>
+> **Not verified against a real browser service.** The behaviour this
+> relies on (`Target.createBrowserContext` with `disposeOnDetach`, and
+> opening the page with `newWindow` when a tab is refused) has been run
+> against a plain headless Chrome only. Whether a given service such as
+> Browserless v2 permits and honours them is untested: check, after a
+> first sign-in, that nothing of it is left in the service.
+
+The traffic between your process and the browser carries the keystrokes
+and the cookies too: use `wss://`, or keep a `ws://` endpoint on a network
+you trust. The size of a message the remote browser sends is not bounded
+by this library (the DevTools client it uses offers no limit): a hostile
+or broken browser can make the process use a lot of memory for the
+duration of a sign-in.
 
 Options that describe a browser the library starts do not apply to one it
 does not. Setting `UserDataDir`, `NoSandbox` or a false `Headless`
-together with `BrowserURL` is an error (`ErrInvalidAuthOptions`) rather than being
-silently ignored. `UserAgent` is applied to the sign-in's page. `DebugLog`
-prints the names of the steps only.
+together with `BrowserURL` is an error (`ErrInvalidAuthOptions`) rather
+than being silently ignored. `UserAgent` is applied to the sign-in's page.
+`DebugLog` prints the names of the steps only.
 
-A remote sign-in submits the form at most once per call, and a failure
-says how far it got. This matters when an account allows one session at a
-time and locks after repeated bad submissions:
+### What a sign-in checks, and what its errors mean
+
+Both the local and the remote sign-in:
+
+- refuse a username or password containing a line break, a tab, another
+  control character, or a character the browser automation would type as
+  a key instead of as text (`ErrInvalidAuthOptions`, before any browser
+  work). The value is not trimmed for you: a secret read from a file with
+  a trailing newline must be trimmed by the caller. A newline typed into
+  the form is the Enter key, which submits it half filled;
+- type and submit the credentials only while the page is on the origin
+  (scheme, host and port) of the client's base URL. If the sign-in URL
+  ends up on another origin the sign-in fails with `ErrUnexpectedOrigin`
+  and nothing is typed there. There is no allow-list: a portal whose
+  sign-in form lives on a second origin is not supported;
+- return only the cookies that belong to the portal's host (the cookie's
+  domain is that host or a parent domain of it; `Secure` cookies only for
+  an `https` portal). Cookies of other sites the signed-in page embeds
+  are dropped.
+
+A remote sign-in, in addition:
+
+- submits the form at most once per call. A click that fails is never
+  followed by another control or by the Enter key, and a page that
+  submits itself while being filled is not clicked;
+- reports success only on positive evidence: the browser is on the
+  portal's origin, on a new document whose path is not the sign-in
+  page's, with no password field. The portal's error banner is
+  `ErrInvalidCredentials`. Anything else (no answer before `Timeout`, a
+  page that cannot be read, a browser that went away) is an error, never
+  a success;
+- says how far a failed sign-in got. The line is drawn before the first
+  keystroke of the password, not at the click, because a page can submit
+  itself while it is being filled.
+
+This matters when an account allows one session at a time and locks after
+repeated bad submissions. Check the cases in this order:
 
 ```go
 err := client.AuthenticateWithOptions(ctx, opts)
 switch {
 case err == nil:
+    if client.BrowserContextDisposalUnconfirmed() {
+        // Signed in, but the remote browser did not confirm that it
+        // disposed the sign-in's browser context. The connection was
+        // closed, which disposes it; act on this if you need certainty.
+    }
+case errors.Is(err, powerschool.ErrInvalidAuthOptions):
+    // Input that can never work (conflicting options, bad BrowserURL,
+    // a credential with a line break in it). Nothing was sent. Do NOT
+    // retry: fix the input. This never matches
+    // ErrCredentialsNotSubmitted.
 case errors.Is(err, powerschool.ErrInvalidCredentials):
     // The portal rejected the one submission. Do not retry with the
     // same credentials.
 case errors.Is(err, powerschool.ErrCredentialsNotSubmitted):
-    // Nothing reached the portal (browser unreachable, sign-in page did
-    // not load, cancelled early...). Retrying does not count against
-    // the account. errors.Is(err, powerschool.ErrBrowserConnection)
-    // tells a browser problem from a portal problem.
-case errors.Is(err, powerschool.ErrCredentialsSubmitted):
-    // The submission was started and then something failed (timeout,
-    // browser lost). The portal may have accepted or rejected it: do
-    // not retry blindly.
+    // The password never reached the page (browser unreachable, sign-in
+    // page did not load or is on another origin, cancelled early...).
+    // Retrying does not count against the account.
+    // errors.Is(err, powerschool.ErrBrowserConnection) tells a browser
+    // problem from a portal problem.
+default:
+    // ErrCredentialsSubmitted, or any error that matches neither
+    // sentinel: the outcome is unknown. The portal may have accepted or
+    // rejected the sign-in. Do not retry blindly.
 }
 ```
 
-All of these are still `IsAuthError(err)`. The local sign-in does not
-report these stages; its errors are what they were.
+All of these are still `IsAuthError(err)`.
+
+**A failed local sign-in matches neither `ErrCredentialsNotSubmitted` nor
+`ErrCredentialsSubmitted`** (except for the two shared checks above). Treat
+it as outcome unknown, which is what the `default` branch does: never
+write `if !errors.Is(err, ErrCredentialsSubmitted) { retry }`.
+
+The local sign-in also keeps its older success rule: it reports success
+when no error banner is showing three seconds after the click. Against a
+portal slower than that it can report a sign-in that did not happen (the
+session then has no session cookie and the first read fails as expired).
+The remote sign-in does not have this weakness.
 
 ### Session reuse
 

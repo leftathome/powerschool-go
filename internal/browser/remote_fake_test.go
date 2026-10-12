@@ -30,7 +30,7 @@ type fakeCDP struct {
 
 	mu       sync.Mutex
 	calls    []fakeCall
-	behave   map[string]string // method -> "stall" | "close" | "refuse-once"
+	behave   map[string]string // method -> "stall" | "close" | "refuse-once" | "refuse-echo"
 	requests []string          // request URIs of the connections made
 	seen     map[string]chan struct{}
 
@@ -166,6 +166,17 @@ func (f *fakeCDP) loop(conn net.Conn) {
 			continue
 		case "close":
 			return
+		case "refuse-echo":
+			// A refusal that is not "no window", from a browser that
+			// repeats a secret in its message.
+			refusal := map[string]any{"id": msg.ID, "error": map[string]any{
+				"code": -32602, "message": "Invalid parameters " + testPassword + " " + fakeToken,
+			}}
+			out, _ := json.Marshal(refusal)
+			if err := wsutil.WriteServerText(conn, out); err != nil {
+				return
+			}
+			continue
 		case "refuse-once":
 			f.on(msg.Method, "")
 			refusal := map[string]any{"id": msg.ID, "error": map[string]any{

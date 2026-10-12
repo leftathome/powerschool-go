@@ -51,15 +51,34 @@ var (
 	ErrSwitchNotConfirmed = errors.New("student switch was not confirmed by the page")
 )
 
-// Sentinel errors of a sign-in through a remote browser
-// (AuthOptions.BrowserURL). They are reported through errors.Is, alongside
-// the usual CodeAuthFailed / CodeInvalidCredentials classification, and only
-// by a remote sign-in: a local one reports what it always has.
+// Sentinel errors of the browser sign-in, reported through errors.Is
+// alongside the usual CodeAuthFailed / CodeInvalidCredentials
+// classification.
+//
+// ErrInvalidAuthOptions and ErrUnexpectedOrigin are reported by both the
+// local sign-in and the one through a remote browser
+// (AuthOptions.BrowserURL). The submission sentinels and
+// ErrBrowserConnection describe a remote sign-in. Apart from the two shared
+// checks, a failed LOCAL sign-in matches neither ErrCredentialsNotSubmitted
+// nor ErrCredentialsSubmitted: treat it as "outcome unknown", like
+// ErrCredentialsSubmitted.
 var (
-	// ErrInvalidAuthOptions indicates options that cannot be used
-	// together with BrowserURL, or a BrowserURL that is not a ws:// or
-	// wss:// URL. Nothing was sent anywhere.
+	// ErrInvalidAuthOptions indicates input that can never work: options
+	// that cannot be used together with BrowserURL, a BrowserURL that is
+	// not a ws:// or wss:// URL, or a username or password containing a
+	// line break, a tab or another character that cannot be typed as
+	// text (the value is not trimmed for you). Nothing was sent anywhere,
+	// and trying again unchanged cannot succeed: it deliberately does NOT
+	// match ErrCredentialsNotSubmitted.
 	ErrInvalidAuthOptions = browser.ErrInvalidOptions
+
+	// ErrUnexpectedOrigin indicates the page the credentials were about
+	// to be typed into, or submitted from, was not on the origin (scheme,
+	// host and port) of the client's base URL: for example the sign-in
+	// URL redirected to another host. The credentials are not typed into
+	// such a page. Check ErrCredentialsSubmitted to learn whether the
+	// password was already in the page when this was noticed.
+	ErrUnexpectedOrigin = browser.ErrOrigin
 
 	// ErrBrowserConnection indicates the remote browser could not be
 	// reached, or the connection to it was lost during the sign-in. Check
@@ -67,14 +86,19 @@ var (
 	ErrBrowserConnection = browser.ErrBrowserConnection
 
 	// ErrCredentialsNotSubmitted indicates the sign-in stopped before the
-	// form was submitted: the portal has not seen this attempt, so trying
-	// again does not count against the account.
+	// password was typed into the page: the form cannot have been
+	// submitted, the portal has not seen this attempt, and trying again
+	// does not count against the account.
 	ErrCredentialsNotSubmitted = browser.ErrNotSubmitted
 
-	// ErrCredentialsSubmitted indicates the sign-in stopped after its one
-	// submission had been started. The portal may have accepted it (ending
-	// any other session of the account) or rejected it (counting towards a
-	// lockout); do not retry blindly.
+	// ErrCredentialsSubmitted indicates the sign-in stopped at some point
+	// after the password had started to be typed into the page. The line
+	// is drawn there, not at the click, because a page can submit itself
+	// while it is being filled. The outcome is unknown: the portal may
+	// have accepted the sign-in (ending any other session of the account),
+	// rejected it (counting towards a lockout), or never seen it. Do not
+	// retry blindly. Together with ErrInvalidCredentials it means the
+	// portal answered with its sign-in error.
 	ErrCredentialsSubmitted = browser.ErrSubmitted
 )
 

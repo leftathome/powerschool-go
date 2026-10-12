@@ -97,7 +97,7 @@ func (r *redactor) scrub(s string) string {
 // combined with it. Its errors never contain any part of the endpoint.
 func validateRemoteOptions(opts *AuthenticateOptions) error {
 	invalid := func(msg string) error {
-		return &RemoteError{Stage: StageOptions, msg: msg}
+		return &SignInError{Stage: StageOptions, msg: msg}
 	}
 
 	u, err := url.Parse(opts.BrowserURL)

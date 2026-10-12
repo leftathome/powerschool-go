@@ -107,6 +107,16 @@ func assertStage(t *testing.T, err error, wantSubmitted bool) {
 	}
 }
 
+// assertNoStage checks an error that is about the options: it must match
+// neither submission sentinel, so that a caller retrying on "not submitted"
+// does not retry options that can never work.
+func assertNoStage(t *testing.T, err error) {
+	t.Helper()
+	if errors.Is(err, ErrSubmitted) || errors.Is(err, ErrNotSubmitted) {
+		t.Errorf("an options error matches a submission sentinel: %v", err)
+	}
+}
+
 func assertWithin(t *testing.T, start time.Time, limit time.Duration) {
 	t.Helper()
 	if d := time.Since(start); d > limit {
@@ -150,7 +160,7 @@ func TestRemoteOptionsValidation(t *testing.T) {
 			if !errors.Is(err, ErrInvalidOptions) {
 				t.Errorf("error is not ErrInvalidOptions: %v", err)
 			}
-			assertStage(t, err, false)
+			assertNoStage(t, err)
 			if errors.Is(err, ErrBrowserConnection) {
 				t.Errorf("an options error must not look like a connection failure: %v", err)
 			}
@@ -617,22 +627,24 @@ func TestTeardownBudget(t *testing.T) {
 	}
 }
 
-func TestRemoteError_Classification(t *testing.T) {
+func TestSignInError_Classification(t *testing.T) {
 	cases := []struct {
 		name string
-		err  *RemoteError
+		err  *SignInError
 		is   []error
 		not  []error
 	}{
-		{"options", &RemoteError{Stage: StageOptions, msg: "m"},
-			[]error{ErrInvalidOptions, ErrNotSubmitted}, []error{ErrSubmitted, ErrBrowserConnection, ErrRejected}},
-		{"connect", &RemoteError{Stage: StageConnect, Connection: true, msg: "m"},
+		{"options", &SignInError{Stage: StageOptions, msg: "m"},
+			[]error{ErrInvalidOptions}, []error{ErrNotSubmitted, ErrSubmitted, ErrBrowserConnection, ErrRejected, ErrOrigin}},
+		{"wrong origin before filling", &SignInError{Stage: StageBeforeSubmit, Origin: true, msg: "m"},
+			[]error{ErrOrigin, ErrNotSubmitted}, []error{ErrSubmitted, ErrInvalidOptions, ErrRejected}},
+		{"connect", &SignInError{Stage: StageConnect, Connection: true, msg: "m"},
 			[]error{ErrBrowserConnection, ErrNotSubmitted}, []error{ErrSubmitted, ErrInvalidOptions, ErrRejected}},
-		{"before submit, timeout", &RemoteError{Stage: StageBeforeSubmit, msg: "m", ctxErr: context.DeadlineExceeded},
+		{"before submit, timeout", &SignInError{Stage: StageBeforeSubmit, msg: "m", ctxErr: context.DeadlineExceeded},
 			[]error{ErrNotSubmitted, context.DeadlineExceeded}, []error{ErrSubmitted, ErrBrowserConnection}},
-		{"after submit, lost", &RemoteError{Stage: StageAfterSubmit, Connection: true, msg: "m"},
+		{"after submit, lost", &SignInError{Stage: StageAfterSubmit, Connection: true, msg: "m"},
 			[]error{ErrSubmitted, ErrBrowserConnection}, []error{ErrNotSubmitted, ErrRejected}},
-		{"rejected", &RemoteError{Stage: StageAfterSubmit, Rejected: true, msg: "m"},
+		{"rejected", &SignInError{Stage: StageAfterSubmit, Rejected: true, msg: "m"},
 			[]error{ErrSubmitted, ErrRejected}, []error{ErrNotSubmitted, ErrBrowserConnection}},
 	}
 	for _, tc := range cases {
@@ -653,8 +665,14 @@ func TestRemoteError_Classification(t *testing.T) {
 type scriptedSubmit struct {
 	button            string
 	findErr, readyErr error
+	guardErr          error
 	clickErr          error
 	log               []string
+}
+
+func (s *scriptedSubmit) guard(context.Context) error {
+	s.log = append(s.log, "guard")
+	return s.guardErr
 }
 
 func (s *scriptedSubmit) find(context.Context) (string, error) {
@@ -686,9 +704,14 @@ func TestSubmitOnce(t *testing.T) {
 		wantMarks int
 		wantErr   bool
 	}{
-		{"button clicked once", &scriptedSubmit{button: "#b"}, "find ready mark click #b", 1, false},
-		{"a failed click is not followed by anything", &scriptedSubmit{button: "#b", clickErr: boom}, "find ready mark click #b", 1, true},
-		{"no button: enter once", &scriptedSubmit{}, "find mark enter", 1, false},
+		{"button clicked once", &scriptedSubmit{button: "#b"}, "find ready guard mark click #b", 1, false},
+		// The reply to the click can be lost after the browser acted on
+		// it: the mark is set before the click is sent, and nothing
+		// else is tried.
+		{"a failed click is not followed by anything", &scriptedSubmit{button: "#b", clickErr: boom}, "find ready guard mark click #b", 1, true},
+		{"no button: enter once", &scriptedSubmit{}, "find guard mark enter", 1, false},
+		{"page left the portal before the click: nothing sent", &scriptedSubmit{button: "#b", guardErr: boom}, "find ready guard", 0, true},
+		{"page left the portal before enter: nothing sent", &scriptedSubmit{guardErr: boom}, "find guard", 0, true},
 		{"button never clickable: nothing sent", &scriptedSubmit{button: "#b", readyErr: boom}, "find ready", 0, true},
 		{"lookup interrupted: nothing sent", &scriptedSubmit{findErr: boom}, "find", 0, true},
 	}
