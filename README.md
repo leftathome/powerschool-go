@@ -50,6 +50,8 @@ go get github.com/leftathome/powerschool-go
 
 You'll also need Chrome or Chromium installed on the machine running
 your code — `chromedp` launches it to handle login.
+Alternatively, point the sign-in at a browser running elsewhere: see
+[Remote browser](#remote-browser).
 
 ## Quick start
 
@@ -216,6 +218,91 @@ err := client.AuthenticateWithOptions(ctx, &powerschool.AuthOptions{
 })
 ```
 
+### Remote browser
+
+By default the sign-in starts a Chrome on the machine running your code.
+Set `BrowserURL` to drive it in a browser that is already running somewhere
+else instead, for example a shared browser service in the same cluster, so
+that no Chrome has to be installed next to your code:
+
+```go
+err := client.AuthenticateWithOptions(ctx, &powerschool.AuthOptions{
+    BrowserURL: os.Getenv("BROWSER_WS_URL"), // "ws://browser.example.internal:3000?token=..."
+    Timeout:    90 * time.Second,
+})
+```
+
+`BrowserURL` is the browser's DevTools WebSocket endpoint. Only `ws://`
+and `wss://` are accepted, and the URL is dialled exactly as given;
+`http://` and `https://` endpoints are rejected rather than resolved. When
+`BrowserURL` is empty nothing changes: the local sign-in is the same code
+path as before.
+
+Only the sign-in uses the remote browser. Combine it with
+`WithHTTPPageFetch()` if nothing in your process should start a browser at
+all; without that option the page reads after the sign-in still start a
+local Chrome.
+
+What the library does on a browser it shares with others:
+
+- The sign-in runs in a browser context created for that one call (an
+  incognito-style profile), never in the browser's default context. It
+  shares no cookie, storage or cache with anything else in that browser.
+- That context is disposed, with its page, cookies and storage, on every
+  way out: success, failure, timeout, cancellation of `ctx`, and a panic.
+  It is also created so that the browser discards it by itself when the
+  connection closes, which covers a process that dies mid-way.
+- Nothing else in the browser is touched: the browser is never closed, and
+  no other context or page is closed, attached to or changed.
+- `Timeout` covers the dial, the sign-in and the disposal. After `ctx` is
+  cancelled the call returns once the context is disposed: normally at
+  once, a few seconds at most, and never later than `Timeout`.
+- The endpoint is treated as a secret because it usually carries a token.
+  Errors and logs show it as `scheme://host[:port]` and nothing else, and
+  errors from the dialer are not kept in the error chain.
+
+What it cannot do: **in remote mode the password is typed into, and the
+session cookies briefly exist in, a browser you do not own.** Whoever
+operates that browser, and anything that can attach to it with the same
+token while the sign-in runs, can observe them. The traffic between your
+process and the browser carries the keystrokes and the cookies too: use
+`wss://`, or keep a `ws://` endpoint on a network you trust. Use a browser
+service you would trust with the account.
+
+Options that describe a browser the library starts do not apply to one it
+does not. Setting `UserDataDir`, `NoSandbox` or a false `Headless`
+together with `BrowserURL` is an error (`ErrInvalidAuthOptions`) rather than being
+silently ignored. `UserAgent` is applied to the sign-in's page. `DebugLog`
+prints the names of the steps only.
+
+A remote sign-in submits the form at most once per call, and a failure
+says how far it got. This matters when an account allows one session at a
+time and locks after repeated bad submissions:
+
+```go
+err := client.AuthenticateWithOptions(ctx, opts)
+switch {
+case err == nil:
+case errors.Is(err, powerschool.ErrInvalidCredentials):
+    // The portal rejected the one submission. Do not retry with the
+    // same credentials.
+case errors.Is(err, powerschool.ErrCredentialsNotSubmitted):
+    // Nothing reached the portal (browser unreachable, sign-in page did
+    // not load, cancelled early...). Retrying does not count against
+    // the account. errors.Is(err, powerschool.ErrBrowserConnection)
+    // tells a browser problem from a portal problem.
+case errors.Is(err, powerschool.ErrCredentialsSubmitted):
+    // The submission was started and then something failed (timeout,
+    // browser lost). The portal may have accepted or rejected it: do
+    // not retry blindly.
+}
+```
+
+All of these are still `IsAuthError(err)`. The local sign-in does not
+report these stages; its errors are what they were.
+
+### Session reuse
+
 Session reuse (skip the browser on subsequent runs while the
 24-hour cookie is still valid):
 
@@ -274,7 +361,8 @@ If you want to add support for a different district, see
 ## Testing
 
 ```bash
-# Fast, hermetic unit tests (no network, no Chrome).
+# Unit tests. No network. Tests that need a browser start a local
+# headless Chrome and are skipped when none is installed or with -short.
 go test ./...
 
 # Live integration test (drives real Chrome against real PowerSchool).
@@ -308,6 +396,13 @@ management, the PII redactor, and adding tests for new behavior.
 
 - Treat session cookies as credentials. `.schoology-session.json`
   and `*session*.json` are gitignored by default.
+- With `AuthOptions.BrowserURL` the password and the session cookies
+  pass through a browser you do not start. The library isolates the
+  sign-in in its own browser context and disposes it afterwards, but
+  cannot protect them from whoever runs that browser. The URL itself
+  usually carries a token: keep it out of source control and logs (the
+  library redacts it in its own errors and logs). See
+  [Remote browser](#remote-browser).
 - Never commit raw PowerSchool captures. Use
   [`hack/redact`](hack/redact) to scrub names, UIDs, and hosts
   before committing test fixtures. See

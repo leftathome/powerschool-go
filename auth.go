@@ -2,6 +2,8 @@ package powerschool
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -46,12 +48,23 @@ func (c *Client) AuthenticateWithOptions(ctx context.Context, opts *AuthOptions)
 		if opts.NoSandbox {
 			browserOpts.NoSandbox = true
 		}
+		if opts.BrowserURL != "" {
+			browserOpts.BrowserURL = opts.BrowserURL
+		}
 	}
 
 	// Perform authentication
 	result, err := browser.Authenticate(ctx, browserOpts)
 	if err != nil {
+		// Only a remote sign-in reports a rejection this way.
+		if errors.Is(err, browser.ErrRejected) {
+			return NewError(CodeInvalidCredentials, "authentication failed",
+				fmt.Errorf("%w: %w", ErrInvalidCredentials, err))
+		}
 		return WrapAuthError(err)
+	}
+	if result.ContextDisposalUnconfirmed {
+		c.logger.Warn("remote browser did not confirm disposal of the sign-in's browser context; the connection was closed, which disposes it")
 	}
 
 	// Store session
@@ -88,6 +101,35 @@ type AuthOptions struct {
 	// NoSandbox passes --no-sandbox to Chrome. Required when running as root
 	// (e.g. inside a container or WSL). Default: false.
 	NoSandbox bool
+
+	// BrowserURL is the DevTools WebSocket endpoint of an already-running
+	// browser, for example a shared browser service:
+	// "ws://browser.example.internal:3000?token=...". When set, the sign-in
+	// is driven in that browser and no local Chrome is started; when
+	// empty (the default), behaviour is unchanged.
+	//
+	// Only ws:// and wss:// are accepted, and the URL is dialled exactly as
+	// given. It usually carries a token, so it is treated as a secret:
+	// errors and logs show it as scheme://host[:port] and nothing more.
+	//
+	// The sign-in runs in a browser context of its own (never the remote
+	// browser's default one) that is disposed, with its page, cookies and
+	// storage, on every way out; the remote browser itself and anything
+	// else in it are left alone. Timeout covers the dial, the sign-in and
+	// that disposal. Still, the password is typed into, and the session
+	// cookies briefly exist in, a browser the caller does not own: see
+	// "Remote browser" in the README.
+	//
+	// UserDataDir, NoSandbox and Headless=false describe a browser this
+	// library starts. Setting any of them together with BrowserURL is an
+	// error (ErrInvalidAuthOptions), not silently ignored. UserAgent is
+	// applied to the sign-in's page. DebugLog prints step names only.
+	//
+	// A failed remote sign-in says how far it got: errors.Is reports
+	// ErrCredentialsNotSubmitted or ErrCredentialsSubmitted, and
+	// ErrBrowserConnection when the browser could not be reached or went
+	// away. The form is submitted at most once per call.
+	BrowserURL string
 }
 
 // RefreshSession attempts to refresh the current session

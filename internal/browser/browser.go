@@ -17,6 +17,12 @@ import (
 type AuthResult struct {
 	Cookies   []*http.Cookie
 	ExpiresAt time.Time
+
+	// ContextDisposalUnconfirmed is set only by a remote sign-in that
+	// succeeded but whose browser context the remote browser did not
+	// confirm as disposed before the timeout. The connection has been
+	// closed, which makes the browser dispose it on its own.
+	ContextDisposalUnconfirmed bool
 }
 
 // AuthenticateOptions contains options for browser authentication
@@ -32,7 +38,46 @@ type AuthenticateOptions struct {
 	NoSandbox       bool
 	WindowSize      [2]int
 	UserAgent       string
+
+	// BrowserURL, when set, is the DevTools WebSocket endpoint (ws:// or
+	// wss://) of an already-running browser to drive instead of starting
+	// a local one. It may carry a token and is never logged or put in an
+	// error. See authenticateRemote.
+	BrowserURL string
 }
+
+// The selectors the sign-in is driven with, in the order they are tried.
+// They are shared by the local and the remote flow.
+var (
+	usernameSelectors = []string{
+		`input[name="account"]`,
+		`input[name="username"]`,
+		`input[id="fieldAccount"]`,
+		`input[type="text"]`,
+	}
+
+	passwordSelectors = []string{
+		`input[name="pw"]`,
+		`input[name="password"]`,
+		`input[id="fieldPassword"]`,
+		`input[type="password"]`,
+	}
+
+	submitSelectors = []string{
+		// Reference-instance selector (PowerSchool's own login button id)
+		`#btn-enter-sign-in`,
+		`#btn-enter`,
+		// Common patterns
+		`button[type="submit"]`,
+		`input[type="submit"]`,
+		`button.button-login`,
+		`input.button-login`,
+		`button[id*="sign-in"]`,
+		`button[id*="login"]`,
+		`form#LoginForm button`,
+		`fieldset#login-inputs button`,
+	}
+)
 
 // DefaultAuthenticateOptions returns default authentication options
 func DefaultAuthenticateOptions() *AuthenticateOptions {
@@ -51,6 +96,12 @@ func DefaultAuthenticateOptions() *AuthenticateOptions {
 func Authenticate(ctx context.Context, opts *AuthenticateOptions) (*AuthResult, error) {
 	if opts == nil {
 		opts = DefaultAuthenticateOptions()
+	}
+
+	// A remote browser is a separate flow; everything below is the local
+	// one and is not reached when BrowserURL is set.
+	if opts.BrowserURL != "" {
+		return authenticateRemote(ctx, opts)
 	}
 
 	// Set up chromedp options
@@ -126,12 +177,7 @@ func Authenticate(ctx context.Context, opts *AuthenticateOptions) (*AuthResult, 
 		// Try multiple possible selectors for username field
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			// Try common username field selectors
-			selectors := []string{
-				`input[name="account"]`,
-				`input[name="username"]`,
-				`input[id="fieldAccount"]`,
-				`input[type="text"]`,
-			}
+			selectors := usernameSelectors
 
 			for _, sel := range selectors {
 				var nodes []*cdp.Node
@@ -147,12 +193,7 @@ func Authenticate(ctx context.Context, opts *AuthenticateOptions) (*AuthResult, 
 
 		// Try multiple possible selectors for password field
 		chromedp.ActionFunc(func(ctx context.Context) error {
-			selectors := []string{
-				`input[name="pw"]`,
-				`input[name="password"]`,
-				`input[id="fieldPassword"]`,
-				`input[type="password"]`,
-			}
+			selectors := passwordSelectors
 
 			for _, sel := range selectors {
 				var nodes []*cdp.Node
@@ -171,20 +212,7 @@ func Authenticate(ctx context.Context, opts *AuthenticateOptions) (*AuthResult, 
 
 		// Try multiple possible selectors for submit button
 		chromedp.ActionFunc(func(ctx context.Context) error {
-			selectors := []string{
-				// Reference-instance selector (PowerSchool's own login button id)
-				`#btn-enter-sign-in`,
-				`#btn-enter`,
-				// Common patterns
-				`button[type="submit"]`,
-				`input[type="submit"]`,
-				`button.button-login`,
-				`input.button-login`,
-				`button[id*="sign-in"]`,
-				`button[id*="login"]`,
-				`form#LoginForm button`,
-				`fieldset#login-inputs button`,
-			}
+			selectors := submitSelectors
 
 			if opts.DebugLog {
 				fmt.Printf("[chromedp] Searching for submit button...\n")
@@ -247,6 +275,12 @@ func Authenticate(ctx context.Context, opts *AuthenticateOptions) (*AuthResult, 
 		return nil, fmt.Errorf("authentication failed: %w", err)
 	}
 
+	return buildAuthResult(sessionCookies), nil
+}
+
+// buildAuthResult converts the cookies read from the browser into the
+// result of a sign-in.
+func buildAuthResult(sessionCookies []*network.Cookie) *AuthResult {
 	// Convert network cookies to http.Cookie
 	httpCookies := make([]*http.Cookie, 0, len(sessionCookies))
 	var maxExpires time.Time
@@ -284,7 +318,7 @@ func Authenticate(ctx context.Context, opts *AuthenticateOptions) (*AuthResult, 
 	return &AuthResult{
 		Cookies:   httpCookies,
 		ExpiresAt: maxExpires,
-	}, nil
+	}
 }
 
 // convertSameSite converts chromedp cookie SameSite to http.Cookie SameSite
