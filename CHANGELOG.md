@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Planned as 0.5.0. With `BrowserURL` unset the sign-in still starts a local
+## [0.5.0] - 2026-10-12
+
+With `BrowserURL` unset the sign-in still starts a local
 Chrome and drives it as in 0.4.0, with three added checks that also apply
 to it (see "Changed").
 
