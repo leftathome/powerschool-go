@@ -22,6 +22,8 @@ func (c *Client) AuthenticateWithOptions(ctx context.Context, opts *AuthOptions)
 		return ErrNoCredentials
 	}
 
+	c.contextDisposalUnconfirmed = false
+
 	// Build browser authentication options
 	browserOpts := browser.DefaultAuthenticateOptions()
 	browserOpts.BaseURL = c.baseURL
@@ -64,6 +66,7 @@ func (c *Client) AuthenticateWithOptions(ctx context.Context, opts *AuthOptions)
 		return WrapAuthError(err)
 	}
 	if result.ContextDisposalUnconfirmed {
+		c.contextDisposalUnconfirmed = true
 		c.logger.Warn("remote browser did not confirm disposal of the sign-in's browser context; the connection was closed, which disposes it")
 	}
 
@@ -74,6 +77,19 @@ func (c *Client) AuthenticateWithOptions(ctx context.Context, opts *AuthOptions)
 	}
 
 	return nil
+}
+
+// BrowserContextDisposalUnconfirmed reports whether the most recent
+// successful sign-in through a remote browser (AuthOptions.BrowserURL)
+// ended without that browser confirming that it disposed the sign-in's
+// browser context, the one that held the session cookies. The sign-in
+// still succeeded and the connection was closed, which makes a browser
+// dispose the context by itself; a caller that needs certainty can act on
+// this (for example restart the browser service, or end the session and
+// sign in again later). It is false after a local sign-in, after a failed
+// one, and after a confirmed disposal. Every sign-in attempt resets it.
+func (c *Client) BrowserContextDisposalUnconfirmed() bool {
+	return c.contextDisposalUnconfirmed
 }
 
 // AuthOptions contains options for authentication
@@ -126,9 +142,13 @@ type AuthOptions struct {
 	// applied to the sign-in's page. DebugLog prints step names only.
 	//
 	// A failed remote sign-in says how far it got: errors.Is reports
-	// ErrCredentialsNotSubmitted or ErrCredentialsSubmitted, and
-	// ErrBrowserConnection when the browser could not be reached or went
-	// away. The form is submitted at most once per call.
+	// ErrCredentialsNotSubmitted or ErrCredentialsSubmitted (see those),
+	// and ErrBrowserConnection when the browser could not be reached or
+	// went away. The form is submitted at most once per call, and success
+	// is reported only on positive evidence that the browser left the
+	// sign-in form. If the remote browser does not confirm the disposal
+	// of the browser context, the sign-in still succeeds and
+	// Client.BrowserContextDisposalUnconfirmed reports it.
 	BrowserURL string
 }
 

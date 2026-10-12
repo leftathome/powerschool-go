@@ -38,8 +38,20 @@ import (
 //     error is not kept in the chain. Credentials, cookies and page content
 //     are never logged or put in an error.
 //   - One submission. The sign-in form is submitted at most once per call,
-//     and an error says whether that had happened yet.
+//     and an error says whether that can have happened yet. The line is
+//     drawn before the first keystroke into the password field, not at the
+//     click: a page can submit itself while it is being filled, and this
+//     code cannot rule that out for a page it does not control.
+//   - Only the portal. The credentials are typed and submitted only while
+//     the page is on the configured portal's origin, and only cookies that
+//     belong to the portal's host are returned.
+//   - No guessed success. A sign-in is reported as successful only on
+//     positive evidence that the browser left the sign-in form.
 //   - Bounded. Timeout covers the dial, the page work and the disposal.
+//
+// Known limit: the size of a message the remote browser sends is not
+// bounded. chromedp dials the endpoint itself and offers neither a read
+// limit nor a way to supply the connection.
 
 // Sentinels reported (through errors.Is) by errors of the remote sign-in.
 // The root package re-exports them.
@@ -52,12 +64,19 @@ var (
 	// the connection to it was lost.
 	ErrBrowserConnection = errors.New("remote browser connection failed")
 
-	// ErrNotSubmitted: the sign-in stopped before the form was submitted.
+	// ErrNotSubmitted: the sign-in stopped before the password was typed
+	// into the page, so the form cannot have been submitted. Never
+	// reported together with ErrInvalidOptions.
 	ErrNotSubmitted = errors.New("credentials were not submitted")
 
-	// ErrSubmitted: the sign-in stopped after the single submission had
-	// been started. The portal may have seen the credentials.
-	ErrSubmitted = errors.New("credentials were submitted")
+	// ErrSubmitted: the sign-in stopped after the password had started to
+	// be typed into the page. The portal may have seen the credentials;
+	// the outcome is unknown unless ErrRejected is reported too.
+	ErrSubmitted = errors.New("credentials may have been submitted")
+
+	// ErrOrigin: the page the credentials were about to be typed into, or
+	// submitted from, was not on the portal's origin.
+	ErrOrigin = errors.New("sign-in page is not on the portal's origin")
 
 	// ErrRejected: the portal answered the submission with its
 	// sign-in error.
@@ -72,15 +91,18 @@ const (
 	StageOptions Stage = iota
 	// StageConnect: connecting to the remote browser.
 	StageConnect
-	// StageBeforeSubmit: connected; the form was not submitted.
+	// StageBeforeSubmit: the password had not been typed into the page;
+	// the form cannot have been submitted.
 	StageBeforeSubmit
-	// StageAfterSubmit: the single submission was started.
+	// StageAfterSubmit: the password was being or had been typed into
+	// the page; the form may have been submitted.
 	StageAfterSubmit
 )
 
-// RemoteError is every error the remote sign-in returns. Its text is built
-// only from fixed strings and the redacted endpoint.
-type RemoteError struct {
+// SignInError is every error the remote sign-in returns, and the error of
+// the checks the local sign-in shares with it. Its text is built only from
+// fixed strings, origins (scheme, host and port) and the redacted endpoint.
+type SignInError struct {
 	// Stage says how far the sign-in got.
 	Stage Stage
 	// Connection is set when the browser could not be reached or the
@@ -88,38 +110,56 @@ type RemoteError struct {
 	Connection bool
 	// Rejected is set when the portal showed its sign-in error.
 	Rejected bool
+	// Origin is set when the page was not on the portal's origin.
+	Origin bool
+	// Evidence is set when the sign-in ended while waiting for the
+	// portal's answer without a conclusive one: what was last seen of
+	// the page, as yes/no observations only.
+	Evidence *OutcomeEvidence
 
+	local  bool // raised by the local flow
 	msg    string
 	ctxErr error
 }
 
 // Error implements the error interface.
-func (e *RemoteError) Error() string {
+func (e *SignInError) Error() string {
 	var stage string
 	switch e.Stage {
 	case StageOptions:
 		stage = "nothing was sent"
 	case StageAfterSubmit:
-		stage = "credentials were submitted once"
+		stage = "credentials may have been submitted; outcome unknown"
+		if e.Rejected {
+			stage = "credentials were submitted once"
+		}
 	default:
 		stage = "credentials were not submitted"
 	}
-	return "remote browser sign-in: " + e.msg + " (" + stage + ")"
+	prefix := "remote browser sign-in: "
+	if e.local {
+		prefix = "browser sign-in: "
+	}
+	return prefix + e.msg + " (" + stage + ")"
 }
 
 // Is reports the sentinels that describe this error.
-func (e *RemoteError) Is(target error) bool {
+func (e *SignInError) Is(target error) bool {
 	switch target {
 	case ErrInvalidOptions:
 		return e.Stage == StageOptions
 	case ErrBrowserConnection:
 		return e.Connection
 	case ErrNotSubmitted:
-		return e.Stage != StageAfterSubmit
+		// Not for StageOptions: a caller that retries on "not
+		// submitted" must not retry options that can never work.
+		return e.Stage == StageConnect || e.Stage == StageBeforeSubmit
 	case ErrSubmitted:
 		return e.Stage == StageAfterSubmit
 	case ErrRejected:
 		return e.Rejected
+	case ErrOrigin:
+		return e.Origin
 	}
 	return false
 }
@@ -127,7 +167,7 @@ func (e *RemoteError) Is(target error) bool {
 // Unwrap returns context.DeadlineExceeded or context.Canceled when one of
 // them ended the sign-in, and nothing else: errors from the dialer and the
 // protocol are deliberately not kept in the chain.
-func (e *RemoteError) Unwrap() error {
+func (e *SignInError) Unwrap() error {
 	return e.ctxErr
 }
 
@@ -139,11 +179,12 @@ func (e stepError) Error() string { return string(e) }
 // The waits of the remote flow. The settle waits are those of the local
 // flow.
 const (
-	remoteSettleAfterLoad   = 1 * time.Second
-	remoteSettleAfterFill   = 500 * time.Millisecond
-	remoteSettleAfterSubmit = 3 * time.Second
-	remoteMaxTeardown       = 5 * time.Second
-	remotePollInterval      = 100 * time.Millisecond
+	remoteSettleAfterLoad     = 1 * time.Second
+	remoteSettleAfterFill     = 500 * time.Millisecond
+	remoteSettleAfterAccepted = 1 * time.Second
+	remoteMaxTeardown         = 5 * time.Second
+	remotePollInterval        = 100 * time.Millisecond
+	remoteOutcomePollInterval = 250 * time.Millisecond
 )
 
 // How long the remote flow looks for a form field or the submit button
@@ -175,6 +216,10 @@ func authenticateRemote(ctx context.Context, opts *AuthenticateOptions) (_ *Auth
 		return nil, err
 	}
 	red := newRedactor(opts.BrowserURL)
+	wantOrigin := canonicalOrigin(opts.BaseURL)
+	if wantOrigin == "" {
+		return nil, &SignInError{Stage: StageOptions, msg: "the portal's base URL is not an http:// or https:// URL with a plain ASCII host"}
+	}
 
 	timeout := opts.Timeout
 	if timeout <= 0 {
@@ -184,7 +229,7 @@ func authenticateRemote(ctx context.Context, opts *AuthenticateOptions) (_ *Auth
 	workDeadline := deadline.Add(-teardownBudget(timeout))
 
 	if err := ctx.Err(); err != nil {
-		return nil, &RemoteError{Stage: StageConnect, msg: "the context was done before connecting", ctxErr: err}
+		return nil, &SignInError{Stage: StageConnect, msg: "the context was done before connecting", ctxErr: err}
 	}
 
 	// The browser context must outlive the caller's cancellation long
@@ -212,7 +257,7 @@ func authenticateRemote(ctx context.Context, opts *AuthenticateOptions) (_ *Auth
 		if s.teardown(deadline) {
 			return
 		}
-		var re *RemoteError
+		var re *SignInError
 		if errors.As(retErr, &re) {
 			re.msg += "; disposal of the browser context was not confirmed"
 		} else if result != nil {
@@ -250,7 +295,7 @@ func authenticateRemote(ctx context.Context, opts *AuthenticateOptions) (_ *Auth
 		}
 	}
 	if a.err != nil {
-		e := &RemoteError{Stage: StageConnect, Connection: true}
+		e := &SignInError{Stage: StageConnect, Connection: true}
 		switch {
 		case ctx.Err() != nil:
 			e.msg = "cancelled while connecting to the remote browser at " + red.display
@@ -271,8 +316,15 @@ func authenticateRemote(ctx context.Context, opts *AuthenticateOptions) (_ *Auth
 		cookies   []*network.Cookie
 		workCtx   = setupCtx
 	)
+	// waiting is set while the portal's answer is waited for.
+	var waiting func() *OutcomeEvidence
 	fail := func(err error) error {
-		return classifyRemote(err, step, submitted.Load(), ctx, workCtx, a.b, red)
+		e := classifyRemote(err, step, submitted.Load(), ctx, workCtx, a.b, red)
+		if waiting != nil && !e.Rejected {
+			e.Evidence = waiting()
+			e.msg += "; " + e.Evidence.String()
+		}
+		return e
 	}
 	named := func(name string, action chromedp.Action) chromedp.Action {
 		return chromedp.ActionFunc(func(ctx context.Context) error {
@@ -314,6 +366,7 @@ func authenticateRemote(ctx context.Context, opts *AuthenticateOptions) (_ *Auth
 	}
 
 	loginURL := opts.BaseURL + "/public/"
+	var before pageState
 	actions := []chromedp.Action{
 		named("opening the sign-in page", chromedp.Navigate(loginURL)),
 		chromedp.Sleep(remoteSettleAfterLoad),
@@ -325,6 +378,9 @@ func authenticateRemote(ctx context.Context, opts *AuthenticateOptions) (_ *Auth
 			if sel == "" {
 				return stepError("the username field was not found")
 			}
+			if err := requirePortalOrigin(ctx, wantOrigin); err != nil {
+				return err
+			}
 			return chromedp.SendKeys(sel, opts.Username, chromedp.ByQuery).Do(ctx)
 		})),
 		named("filling the password field", chromedp.ActionFunc(func(ctx context.Context) error {
@@ -335,20 +391,77 @@ func authenticateRemote(ctx context.Context, opts *AuthenticateOptions) (_ *Auth
 			if sel == "" {
 				return stepError("the password field was not found")
 			}
+			if err := requirePortalOrigin(ctx, wantOrigin); err != nil {
+				return err
+			}
+			// The page as it is before the password goes in: what the
+			// portal's answer is told apart from, and what tells
+			// whether the page went on to submit itself.
+			st, err := readPageState(ctx)
+			if err != nil {
+				if ctx.Err() != nil {
+					return ctx.Err()
+				}
+				return stepError("the sign-in page could not be read before filling the password")
+			}
+			before = st
+			var installed bool
+			if err := chromedp.Evaluate(watchSubmissionJS, &installed).Do(ctx); err != nil && ctx.Err() != nil {
+				return ctx.Err()
+			}
+			// From the first keystroke of the password on, the page
+			// holds what it needs to submit itself (a handler on the
+			// field, a script, a lost reply to the click). Anything
+			// that goes wrong from here is "may have been submitted".
+			submitted.Store(true)
 			return chromedp.SendKeys(sel, opts.Password, chromedp.ByQuery).Do(ctx)
 		})),
 		chromedp.Sleep(remoteSettleAfterFill),
 		named("submitting the sign-in form", chromedp.ActionFunc(func(ctx context.Context) error {
-			return submitOnce(ctx, pageSubmitDriver{}, func() { submitted.Store(true) })
-		})),
-		named("waiting for the portal's answer", chromedp.Sleep(remoteSettleAfterSubmit)),
-		named("reading the result", chromedp.ActionFunc(func(ctx context.Context) error {
-			var rejected bool
-			err := chromedp.Evaluate(`document.querySelector('.feedback-alert') !== null`, &rejected).Do(ctx)
-			if err == nil && rejected {
-				return ErrRejected
+			// A page that submitted itself while it was being filled
+			// is not submitted again: one submission per call. Its
+			// answer is waited for like any other.
+			st, err := readPageState(ctx)
+			if ctx.Err() != nil {
+				return ctx.Err()
 			}
-			got, err := network.GetCookies().Do(ctx)
+			if alreadySubmitted(st, err, before) {
+				return nil
+			}
+			return submitOnce(ctx, pageSubmitDriver{wantOrigin: wantOrigin}, func() { submitted.Store(true) })
+		})),
+		named("waiting for the portal's answer", chromedp.ActionFunc(func(ctx context.Context) error {
+			// There is no "probably fine": this returns on positive
+			// evidence either way, or not at all. A failed evaluation
+			// (a navigation in flight) is not evidence.
+			started := time.Now()
+			var last *pageState
+			waiting = func() *OutcomeEvidence {
+				return evidenceFrom(last, before, wantOrigin, time.Since(started))
+			}
+			for {
+				if st, err := readPageState(ctx); err == nil {
+					last = &st
+					switch judgeOutcome(st, before, wantOrigin) {
+					case outcomeAccepted:
+						waiting = nil
+						return nil
+					case outcomeRejected:
+						return ErrRejected
+					}
+				}
+				t := time.NewTimer(remoteOutcomePollInterval)
+				select {
+				case <-ctx.Done():
+					t.Stop()
+					return ctx.Err()
+				case <-t.C:
+				}
+			}
+		})),
+		chromedp.Sleep(remoteSettleAfterAccepted),
+		named("reading the session cookies", chromedp.ActionFunc(func(ctx context.Context) error {
+			got, err := readPortalCookies(ctx, opts.BaseURL, wantOrigin)
 			if err != nil {
 				if ctx.Err() != nil {
 					return ctx.Err()
@@ -372,9 +485,9 @@ func authenticateRemote(ctx context.Context, opts *AuthenticateOptions) (_ *Auth
 	return result, nil
 }
 
-// classifyRemote turns a failure of the page work into a RemoteError.
-func classifyRemote(err error, step string, submitted bool, callerCtx, workCtx context.Context, b *chromedp.Browser, red *redactor) *RemoteError {
-	e := &RemoteError{Stage: StageBeforeSubmit}
+// classifyRemote turns a failure of the page work into a SignInError.
+func classifyRemote(err error, step string, submitted bool, callerCtx, workCtx context.Context, b *chromedp.Browser, red *redactor) *SignInError {
+	e := &SignInError{Stage: StageBeforeSubmit}
 	if submitted {
 		e.Stage = StageAfterSubmit
 	}
@@ -388,10 +501,14 @@ func classifyRemote(err error, step string, submitted bool, callerCtx, workCtx c
 
 	var se stepError
 	var pe *cdproto.Error
+	var om *originMismatch
 	switch {
 	case errors.Is(err, ErrRejected):
 		e.Rejected = true
 		e.msg = "the portal rejected the sign-in"
+	case errors.As(err, &om):
+		e.Origin = true
+		e.msg = om.Error()
 	case lost:
 		e.Connection = true
 		e.msg = "the connection to the remote browser at " + red.display + " was lost while " + step
@@ -404,9 +521,10 @@ func classifyRemote(err error, step string, submitted bool, callerCtx, workCtx c
 	case errors.As(err, &se):
 		e.msg = string(se)
 	case errors.As(err, &pe):
-		// A DevTools protocol error: a code and the browser's own
-		// fixed message for it, never page content.
-		e.msg = "the browser refused a command while " + step + ": " + red.scrub(pe.Error())
+		// A DevTools protocol error. Only its numeric code is
+		// repeated: the message is whatever the remote end chose to
+		// send, and by now it may know the password.
+		e.msg = "the browser refused a command (protocol error " + strconv.FormatInt(pe.Code, 10) + ") while " + step
 	default:
 		e.msg = "failed while " + step
 		if code := netErrorCode(err); code != "" {
@@ -440,11 +558,18 @@ func netErrorCode(err error) string {
 // context and goes away with it.
 func createPage(onBrowser context.Context, contextID cdp.BrowserContextID) (target.ID, error) {
 	id, err := target.CreateTarget("about:blank").WithBrowserContextID(contextID).Do(onBrowser)
-	var pe *cdproto.Error
-	if err != nil && errors.As(err, &pe) {
+	if needsWindow(err) {
 		id, err = target.CreateTarget("about:blank").WithBrowserContextID(contextID).WithNewWindow(true).Do(onBrowser)
 	}
 	return id, err
+}
+
+// needsWindow reports whether err is the browser's refusal to open a tab
+// in a browser context that has no window. Nothing else is retried.
+func needsWindow(err error) bool {
+	var pe *cdproto.Error
+	return err != nil && errors.As(err, &pe) &&
+		pe.Code == -32000 && strings.Contains(pe.Message, "no browser is open")
 }
 
 // remoteSession is what one remote sign-in holds in the remote browser.
@@ -559,6 +684,8 @@ func firstPresent(ctx context.Context, selectors []string, wait time.Duration) (
 type submitDriver interface {
 	// find returns the submit control to use, or "" when there is none.
 	find(ctx context.Context) (string, error)
+	// guard is the last check before anything that submits is sent.
+	guard(ctx context.Context) error
 	// ready waits until the control can be clicked. It sends nothing.
 	ready(ctx context.Context, sel string) error
 	// click clicks the control once.
@@ -577,19 +704,29 @@ func submitOnce(ctx context.Context, d submitDriver, mark func()) error {
 	if err != nil {
 		return err
 	}
-	if sel == "" {
-		mark()
-		return d.enter(ctx)
+	if sel != "" {
+		if err := d.ready(ctx, sel); err != nil {
+			return err
+		}
 	}
-	if err := d.ready(ctx, sel); err != nil {
+	if err := d.guard(ctx); err != nil {
 		return err
 	}
 	mark()
+	if sel == "" {
+		return d.enter(ctx)
+	}
 	return d.click(ctx, sel)
 }
 
 // pageSubmitDriver drives the page of the context it is given.
-type pageSubmitDriver struct{}
+type pageSubmitDriver struct {
+	wantOrigin string
+}
+
+func (d pageSubmitDriver) guard(ctx context.Context) error {
+	return requirePortalOrigin(ctx, d.wantOrigin)
+}
 
 func (pageSubmitDriver) find(ctx context.Context) (string, error) {
 	return firstPresent(ctx, submitSelectors, remoteButtonWait)

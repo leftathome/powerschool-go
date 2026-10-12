@@ -3,6 +3,7 @@ package powerschool
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
@@ -13,6 +14,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/leftathome/powerschool-go/internal/browser"
 	"github.com/leftathome/powerschool-go/internal/cdptest"
 )
 
@@ -130,8 +132,10 @@ func TestAuthenticateWithOptions_BrowserURL_InvalidCombinations(t *testing.T) {
 			if !errors.Is(err, ErrInvalidAuthOptions) {
 				t.Fatalf("error is not ErrInvalidAuthOptions: %v", err)
 			}
-			if !errors.Is(err, ErrCredentialsNotSubmitted) {
-				t.Errorf("error does not say the credentials were not submitted: %v", err)
+			// Not "not submitted": a caller that retries on that
+			// sentinel must not retry options that can never work.
+			if errors.Is(err, ErrCredentialsNotSubmitted) || errors.Is(err, ErrCredentialsSubmitted) {
+				t.Errorf("an options error matches a submission sentinel: %v", err)
 			}
 			if errors.Is(err, ErrBrowserConnection) {
 				t.Errorf("an options error must not look like a connection failure: %v", err)
@@ -247,6 +251,110 @@ func TestAuthenticateWithOptions_BrowserURL_RealBrowser_Accepted(t *testing.T) {
 	}
 	if strings.Contains(logs.String(), "did not confirm disposal") {
 		t.Errorf("the disposal of the browser context was not confirmed: %s", logs.String())
+	}
+	if c.BrowserContextDisposalUnconfirmed() {
+		t.Errorf("BrowserContextDisposalUnconfirmed = true after a confirmed disposal")
+	}
+}
+
+// A sign-in that succeeds while the remote browser never confirms the
+// disposal of its browser context still succeeds; the caller can tell, and
+// not only from a log line.
+func TestAuthenticateWithOptions_BrowserURL_RealBrowser_UnconfirmedDisposal(t *testing.T) {
+	wsURL, _ := cdptest.StartChrome(t)
+	proxy := cdptest.NewLossyProxy(t, wsURL, func(method string, _ json.RawMessage) bool {
+		return method == "Target.disposeBrowserContext"
+	})
+	var posts atomic.Int32
+	portal := remoteTestPortal(t, &posts)
+
+	var logs bytes.Buffer
+	c := remoteTestClient(t, portal.URL, &logs)
+	err := c.AuthenticateWithOptions(context.Background(), &AuthOptions{
+		BrowserURL: proxy.URL + "/?token=" + remoteTestToken,
+		Timeout:    30 * time.Second,
+	})
+	if err != nil {
+		t.Fatalf("AuthenticateWithOptions: %v", err)
+	}
+	if !c.IsAuthenticated() {
+		t.Errorf("the client is not authenticated")
+	}
+	if !c.BrowserContextDisposalUnconfirmed() {
+		t.Errorf("BrowserContextDisposalUnconfirmed = false although the browser never confirmed")
+	}
+
+	// The next attempt resets it, whatever its own outcome.
+	_ = c.AuthenticateWithOptions(context.Background(), &AuthOptions{BrowserURL: "http://not-a-websocket.invalid"})
+	if c.BrowserContextDisposalUnconfirmed() {
+		t.Errorf("BrowserContextDisposalUnconfirmed was not reset by the next sign-in attempt")
+	}
+}
+
+// A credential with a line break in it (a secret read from a file with a
+// trailing newline) is refused before any browser is started or reached,
+// in both modes, and is not something to retry.
+func TestAuthenticateWithOptions_CredentialWithNewline(t *testing.T) {
+	for name, opts := range map[string]*AuthOptions{
+		"local":  {Timeout: 30 * time.Second},
+		"remote": {BrowserURL: "ws://browser.example.internal:3000?token=" + remoteTestToken, Timeout: 30 * time.Second},
+	} {
+		for _, field := range []string{"username", "password"} {
+			t.Run(name+"/"+field, func(t *testing.T) {
+				user, pw := remoteTestUser, remoteTestPassword
+				if field == "username" {
+					user += "\n"
+				} else {
+					pw += "\r\n"
+				}
+				var logs bytes.Buffer
+				c, err := NewClient("portal.invalid", WithCredentials(user, pw), WithLogger(NewLogger(LogLevelDebug, &logs)))
+				if err != nil {
+					t.Fatalf("NewClient: %v", err)
+				}
+				start := time.Now()
+				err = c.AuthenticateWithOptions(context.Background(), opts)
+				if time.Since(start) > 2*time.Second {
+					t.Errorf("took %v: browser work was started", time.Since(start))
+				}
+				if !errors.Is(err, ErrInvalidAuthOptions) {
+					t.Fatalf("error is not ErrInvalidAuthOptions: %v", err)
+				}
+				if errors.Is(err, ErrCredentialsNotSubmitted) || errors.Is(err, ErrCredentialsSubmitted) {
+					t.Errorf("an options error matches a submission sentinel: %v", err)
+				}
+				if !IsAuthError(err) {
+					t.Errorf("IsAuthError = false for %v", err)
+				}
+				assertRemoteErrorIsClean(t, err, &logs, remoteTestToken, remoteTestPassword, remoteTestUser)
+			})
+		}
+	}
+}
+
+func TestSignInEvidenceOf(t *testing.T) {
+	if _, ok := SignInEvidenceOf(errors.New("plain")); ok {
+		t.Errorf("evidence reported for a plain error")
+	}
+	if _, ok := SignInEvidenceOf(nil); ok {
+		t.Errorf("evidence reported for nil")
+	}
+	inner := &browser.SignInError{Stage: browser.StageAfterSubmit, Evidence: &SignInEvidence{PageRead: true, NewDocument: true, PortalOrigin: true, Elapsed: 9 * time.Second}}
+	ev, ok := SignInEvidenceOf(WrapAuthError(inner))
+	if !ok || !ev.NewDocument || !ev.PortalOrigin || ev.PathChanged || ev.Elapsed != 9*time.Second {
+		t.Errorf("SignInEvidenceOf = %+v, %v", ev, ok)
+	}
+	if !errors.Is(WrapAuthError(inner), ErrCredentialsSubmitted) {
+		t.Errorf("the error is not ErrCredentialsSubmitted")
+	}
+}
+
+// The origin sentinel is the internal one, so errors.Is works through the
+// public name.
+func TestErrUnexpectedOrigin_IsExported(t *testing.T) {
+	wrapped := WrapAuthError(fmt.Errorf("authentication failed: %w", ErrUnexpectedOrigin))
+	if !errors.Is(wrapped, ErrUnexpectedOrigin) || !IsAuthError(wrapped) {
+		t.Errorf("ErrUnexpectedOrigin is not matched through an auth error: %v", wrapped)
 	}
 }
 

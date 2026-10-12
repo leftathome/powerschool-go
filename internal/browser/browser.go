@@ -2,6 +2,7 @@ package browser
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -98,10 +99,34 @@ func Authenticate(ctx context.Context, opts *AuthenticateOptions) (*AuthResult, 
 		opts = DefaultAuthenticateOptions()
 	}
 
+	// A credential that cannot be typed as plain text is refused before
+	// any browser is started or reached, in both flows.
+	if err := validateCredentials(opts); err != nil {
+		return nil, err
+	}
+
 	// A remote browser is a separate flow; everything below is the local
 	// one and is not reached when BrowserURL is set.
 	if opts.BrowserURL != "" {
 		return authenticateRemote(ctx, opts)
+	}
+
+	wantOrigin := canonicalOrigin(opts.BaseURL)
+	if wantOrigin == "" {
+		return nil, &SignInError{Stage: StageOptions, local: true, msg: "the portal's base URL is not an http:// or https:// URL with a plain ASCII host"}
+	}
+	// originGuard fails unless the page is on the portal's own origin. It
+	// runs before the fields are filled and again before the form is
+	// submitted.
+	originGuard := func(stage Stage) chromedp.Action {
+		return chromedp.ActionFunc(func(ctx context.Context) error {
+			err := requirePortalOrigin(ctx, wantOrigin)
+			var om *originMismatch
+			if errors.As(err, &om) {
+				return &SignInError{Stage: stage, Origin: true, local: true, msg: om.Error()}
+			}
+			return err
+		})
 	}
 
 	// Set up chromedp options
@@ -174,6 +199,9 @@ func Authenticate(ctx context.Context, opts *AuthenticateOptions) (*AuthResult, 
 			return nil
 		}),
 
+		// The credentials go to the portal's own origin only
+		originGuard(StageBeforeSubmit),
+
 		// Try multiple possible selectors for username field
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			// Try common username field selectors
@@ -209,6 +237,11 @@ func Authenticate(ctx context.Context, opts *AuthenticateOptions) (*AuthResult, 
 
 		// Wait a moment for fields to be filled
 		chromedp.Sleep(500*time.Millisecond),
+
+		// Still the portal's own origin, immediately before submitting.
+		// The password is in the page by now, so a failure here does not
+		// claim that nothing was submitted.
+		originGuard(StageAfterSubmit),
 
 		// Try multiple possible selectors for submit button
 		chromedp.ActionFunc(func(ctx context.Context) error {
@@ -261,7 +294,9 @@ func Authenticate(ctx context.Context, opts *AuthenticateOptions) (*AuthResult, 
 
 			// If no error, we should be on the dashboard or home page
 			// Extract all cookies using the correct API
-			cookies, err := network.GetCookies().Do(ctx)
+			// Only the cookies that belong to the portal: the client
+			// attaches every cookie it holds to its requests.
+			cookies, err := readPortalCookies(ctx, opts.BaseURL, wantOrigin)
 			if err != nil {
 				return fmt.Errorf("failed to get cookies: %w", err)
 			}
