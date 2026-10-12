@@ -3,6 +3,8 @@ package powerschool
 import (
 	"errors"
 	"fmt"
+
+	"github.com/leftathome/powerschool-go/internal/browser"
 )
 
 // Sentinel errors
@@ -47,6 +49,33 @@ var (
 	// but the page read afterwards does not mark the requested student as
 	// selected.
 	ErrSwitchNotConfirmed = errors.New("student switch was not confirmed by the page")
+)
+
+// Sentinel errors of a sign-in through a remote browser
+// (AuthOptions.BrowserURL). They are reported through errors.Is, alongside
+// the usual CodeAuthFailed / CodeInvalidCredentials classification, and only
+// by a remote sign-in: a local one reports what it always has.
+var (
+	// ErrInvalidAuthOptions indicates options that cannot be used
+	// together with BrowserURL, or a BrowserURL that is not a ws:// or
+	// wss:// URL. Nothing was sent anywhere.
+	ErrInvalidAuthOptions = browser.ErrInvalidOptions
+
+	// ErrBrowserConnection indicates the remote browser could not be
+	// reached, or the connection to it was lost during the sign-in. Check
+	// ErrCredentialsSubmitted to learn whether the form had been submitted.
+	ErrBrowserConnection = browser.ErrBrowserConnection
+
+	// ErrCredentialsNotSubmitted indicates the sign-in stopped before the
+	// form was submitted: the portal has not seen this attempt, so trying
+	// again does not count against the account.
+	ErrCredentialsNotSubmitted = browser.ErrNotSubmitted
+
+	// ErrCredentialsSubmitted indicates the sign-in stopped after its one
+	// submission had been started. The portal may have accepted it (ending
+	// any other session of the account) or rejected it (counting towards a
+	// lockout); do not retry blindly.
+	ErrCredentialsSubmitted = browser.ErrSubmitted
 )
 
 // HTTPStatusError reports an unexpected HTTP status. It carries the status

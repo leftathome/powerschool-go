@@ -7,6 +7,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Planned as 0.5.0. Additive: with `BrowserURL` unset, the sign-in is the
+same code path as in 0.4.0.
+
+### Added
+
+- `AuthOptions.BrowserURL`: run the sign-in in an already-running browser
+  reached over its DevTools WebSocket endpoint (`ws://` or `wss://`, for
+  example a shared browser service) instead of starting a local Chrome.
+  The URL is dialled exactly as given; `http://` / `https://` endpoints
+  are rejected rather than resolved.
+  - The sign-in runs in a browser context of its own, never the remote
+    browser's default one, and that context is disposed on every way out
+    (success, failure, timeout, cancellation, panic). It is created with
+    `disposeOnDetach`, so the browser also discards it when the connection
+    closes. The remote browser itself, and every other context and page in
+    it, are left alone.
+  - `Timeout` bounds the dial, the sign-in and the disposal.
+  - The endpoint usually carries a token and is never logged or put in an
+    error: it is shown as `scheme://host[:port]`, text from the dialer is
+    scrubbed, and the dialer's error is not kept in the error chain.
+  - `UserDataDir`, `NoSandbox` and `Headless=false` cannot be combined
+    with `BrowserURL`; doing so is an error, not silently ignored.
+- Sentinel errors reported by a remote sign-in, through `errors.Is`, in
+  addition to `IsAuthError`:
+  - `ErrCredentialsNotSubmitted` / `ErrCredentialsSubmitted`: whether the
+    one submission of the form had been started when the sign-in failed.
+  - `ErrBrowserConnection`: the remote browser could not be reached, or
+    went away during the sign-in.
+  - `ErrInvalidAuthOptions`: an unusable `BrowserURL` or a conflicting
+    option. Nothing was sent.
+  - A sign-in the portal rejects is `ErrInvalidCredentials` with
+    `CodeInvalidCredentials` (the local sign-in keeps reporting
+    `CodeAuthFailed`, as before).
+- A remote sign-in submits the form at most once per call: a click that
+  fails is never followed by another control or by the Enter key.
+
+### Security
+
+- In remote mode the password is typed into, and the session cookies
+  briefly exist in, a browser the caller does not own. The isolation and
+  disposal above limit what is left behind; they do not protect against
+  whoever operates that browser. See "Remote browser" in the README.
+
+### Changed
+
+- `github.com/gobwas/ws` is listed as a direct dependency (the tests use
+  it for a fake DevTools server; it was already required indirectly, same
+  version).
+- Internal only: the selector lists and the cookie conversion of the local
+  sign-in moved into shared declarations. No behaviour change.
+
+### Not included
+
+- Page reads after the sign-in do not use the remote browser. Use
+  `WithHTTPPageFetch` to avoid a local browser altogether.
+- The local sign-in does not report the submission stage.
+- Not yet run against a real shared browser service or the real portal:
+  tested against a local headless Chrome, a fake DevTools server, and a
+  local stand-in for the portal.
+
 ## [0.4.0] - 2026-10-11
 
 Not tagged or released yet. Additive only: no existing field, function or
